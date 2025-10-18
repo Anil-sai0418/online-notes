@@ -111,9 +111,9 @@ const AppleNotes = () => {
   };
 
   return (
-    <div className={`h-screen flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`h-screen flex flex-col overflow-y-auto ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* Top Toolbar */}
-      <div className={`flex items-center justify-between px-4 py-2 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+      <div className={`flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDarkMode(!darkMode)}
@@ -121,9 +121,15 @@ const AppleNotes = () => {
           >
             {darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="md:hidden p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setGlobalIsBold(!globalIsBold)}
             className={`p-2 rounded ${globalIsBold ? 'bg-blue-500 text-white' : ''} ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
@@ -165,18 +171,18 @@ const AppleNotes = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden md:overflow-visible">
         {/* Sidebar */}
         {!isFullscreen && (
           <>
             <div 
-              className={`flex flex-col border-r ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}
-              style={{ width: `${sidebarWidth}px` }}
+              style={{ width: isFullscreen ? '100%' : `${sidebarWidth}px` }}
+              className={`hidden md:flex flex-col border-r ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}
             >
               {/* Sidebar Header */}
               <div className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-2xl font-bold">Notes</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold">Notes</h1>
                   <button
                     onClick={addNote}
                     className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
@@ -250,7 +256,7 @@ const AppleNotes = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {currentNote && (
             <>
-              <div className={`flex items-center justify-end px-4 py-2 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className={`flex items-center justify-end px-2 sm:px-4 py-2 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                 <button
                   onClick={() => setIsFullscreen(!isFullscreen)}
                   className={`p-2 rounded hover:bg-opacity-80 ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
@@ -265,7 +271,7 @@ const AppleNotes = () => {
                   value={currentNote.content}
                   onChange={(e) => updateNoteContent(e.target.value)}
                   placeholder="Start typing..."
-                  className={`w-full h-full p-8 resize-none outline-none ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
+                  className={`w-full h-full p-4 sm:p-8 resize-none outline-none ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
                   style={{
                     color: globalTextColor,
                     fontSize: `${globalFontSize}px`,
