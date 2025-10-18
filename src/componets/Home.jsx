@@ -13,7 +13,7 @@ function Home() {
         Capture your thoughts, ideas, and reminders instantly. All your notes are safely stored in your browser using localStorage — no login required!
       </p>
       <button
-        onClick={() => navigate('/online-notes/FullScreen')}
+        onClick={() => navigate('/FullScreen')}
         className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg transition-all"
       >
         Go to Notes
