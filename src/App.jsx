@@ -5,8 +5,8 @@ import Home from "./componets/Home";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/FullScreen" element={<FullScreenComponent/>} />
+      <Route path="/online-notes" element={<Home />} />
+      <Route path="/online-notes/FullScreen" element={<FullScreenComponent/>} />
     </Routes>
   );
 }
