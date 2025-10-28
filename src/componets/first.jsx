@@ -114,37 +114,14 @@ const AppleNotes = () => {
     }
   };
 
-  // Add helper function to convert table content to list
-  const convertTableToList = (html) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const rows = doc.querySelectorAll('tr');
-    let result = '';
-
-    rows.forEach(row => {
-      const cells = row.querySelectorAll('td, th');
-      cells.forEach(cell => {
-        if (cell.textContent.trim()) {
-          result += `• ${cell.textContent.trim()}\n`;
-        }
-      });
-    });
-
-    return result;
-  };
-
-  // Replace existing handlePaste function
+  // Replace handlePaste function
   const handlePaste = async (e) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
-    let hasHandledItem = false;
-
     for (let item of items) {
-      // Handle images
       if (item.type.indexOf('image') !== -1) {
         e.preventDefault();
-        hasHandledItem = true;
         const file = item.getAsFile();
         
         try {
@@ -161,35 +138,6 @@ const AppleNotes = () => {
           console.error('Error handling pasted image:', error);
         }
       }
-      // Handle HTML content (tables)
-      else if (item.type === 'text/html') {
-        e.preventDefault();
-        hasHandledItem = true;
-        
-        item.getAsString(html => {
-          if (html.includes('<table') || html.includes('<tr')) {
-            const listContent = convertTableToList(html);
-            const currentContent = contentRef.current.value;
-            const newContent = currentContent.slice(0, cursorPosition) + 
-                             listContent + 
-                             currentContent.slice(cursorPosition);
-            
-            updateNoteContent(newContent);
-          }
-        });
-      }
-    }
-
-    // If no special content was handled, let the default paste behavior occur
-    if (!hasHandledItem) {
-      const text = e.clipboardData.getData('text/plain');
-      const currentContent = contentRef.current.value;
-      const newContent = currentContent.slice(0, cursorPosition) + 
-                        text + 
-                        currentContent.slice(cursorPosition);
-      
-      updateNoteContent(newContent);
-      e.preventDefault();
     }
   };
 
