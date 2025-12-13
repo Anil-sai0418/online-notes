@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import FormattingToolbar from './FormattingToolbar';
 import ImagesGrid from './ImagesGrid';
 import TextEditor from './TextEditor';
 import { Plus, Trash2, Search, Sun, Moon, Maximize2, Minimize2, Bold, Italic, Underline, Type, X } from 'lucide-react';
+
+// Toast animation handled via Tailwind utility classes
 
 const AppleNotes = () => {
   // Add cursor position state
@@ -30,8 +32,16 @@ const AppleNotes = () => {
   const [globalIsItalic, setGlobalIsItalic] = useState(false);
   const [globalIsUnderline, setGlobalIsUnderline] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '' });
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  const showToast = useCallback((message) => {
+    setToast({ visible: true, message });
+    setTimeout(() => {
+      setToast({ visible: false, message: '' });
+    }, 2500);
+  }, []);
 
   useEffect(() => {
     const storedNotes = localStorage.getItem('notes');
@@ -84,12 +94,19 @@ const AppleNotes = () => {
   };
 
   const deleteNote = (id) => {
-    if (notes.length === 1) return;
+    if (notes.length === 1) {
+      showToast('At least one note must remain');
+      return;
+    }
+
     const newNotes = notes.filter(n => n.id !== id);
     setNotes(newNotes);
+
     if (activeNote === id) {
       setActiveNote(newNotes[0].id);
     }
+
+    showToast('Note deleted successfully');
   };
 
   // Fix updateNoteContent to preserve images
@@ -176,18 +193,33 @@ const AppleNotes = () => {
     });
   };
 
-  // Add keyboard shortcut effect
   useEffect(() => {
     const handleKeyboard = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      // Cmd / Ctrl + K → Focus search
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         searchInputRef.current?.focus();
+      }
+
+      // Cmd / Ctrl + Enter → Create new note
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        addNote();
+        showToast('New note created');
+      }
+
+      // Cmd / Ctrl + Delete → Delete current note
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'Backspace' || e.key === 'Delete')) {
+        e.preventDefault();
+        if (currentNote) {
+          deleteNote(currentNote.id);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyboard);
     return () => window.removeEventListener('keydown', handleKeyboard);
-  }, []);
+  }, [addNote, showToast, currentNote, deleteNote]);
 
   // Add function to handle home navigation
   const navigateHome = () => {
@@ -271,6 +303,17 @@ const AppleNotes = () => {
           )}
         </main>
       </div>
+      {toast.visible && (
+        <div className="fixed top-20 right-6 z-50">
+          <div
+            className={`px-4 py-2 rounded-lg shadow-lg text-sm font-medium
+            animate-slide-in
+            ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'}`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

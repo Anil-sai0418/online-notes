@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Search, Sun, Moon, X } from 'lucide-react';
 
 const Sidebar = ({
@@ -17,6 +18,7 @@ const Sidebar = ({
   setIsMobileSidebarOpen,
   navigateHome
 }) => {
+  const navigate = useNavigate();
   const formatDate = (date) => {
     const now = new Date();
     const noteDate = new Date(date);
@@ -57,8 +59,8 @@ const Sidebar = ({
       </button>
       <div className="p-4 pt-12 md:pt-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h1 
-            onClick={navigateHome}
+          <h1
+            onClick={() => navigate('/')}
             className="text-xl font-bold cursor-pointer hover:opacity-80"
           >
             Notes
@@ -70,12 +72,24 @@ const Sidebar = ({
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button
-              onClick={addNote}
-              className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-            >
-              <Plus size={20} />
-            </button>
+            <div className="relative group">
+              <button
+                onClick={addNote}
+                className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+              >
+                <Plus size={20} />
+              </button>
+
+              <div
+                className="absolute top-full mt-2 right-0
+                whitespace-nowrap px-2 py-1 rounded-md text-xs font-medium
+                bg-gray-900 text-white opacity-0 scale-95
+                group-hover:opacity-100 group-hover:scale-100
+                transition-all duration-150 z-50"
+              >
+                New Note ⌘ + Enter
+              </div>
+            </div>
           </div>
         </div>
         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
@@ -116,15 +130,27 @@ const Sidebar = ({
                     {formatDate(note.timestamp)} {note.content.substring(0, 50)}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteNote(note.id);
-                  }}
-                  className={`p-1 rounded ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
-                >
-                  <Trash2 size={16} className="text-red-500" />
-                </button>
+                <div className="relative group/delete">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteNote(note.id);
+                    }}
+                    className={`p-1 rounded ${darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </button>
+
+                  <div
+                    className="absolute top-full mt-2 right-0
+                    whitespace-nowrap px-2 py-1 rounded-md text-xs font-medium
+                    bg-gray-900 text-white opacity-0 scale-95
+                    group-hover/delete:opacity-100 group-hover/delete:scale-100
+                    transition-all duration-150 z-50"
+                  >
+                    Delete ⌘ + Delete
+                  </div>
+                </div>
               </div>
             </div>
           ))
