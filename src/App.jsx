@@ -1,7 +1,7 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
-import FullScreenComponent from "./componets/first";
-import Home from "./componets/Home";
-import NotFound from "./componets/404";
+import FullScreenComponent from "./parts/first";
+import Home from "./parts/Home";
+import NotFound from "./parts/404";
 
 function App() {
   return (

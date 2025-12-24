@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
+
 function Home() {
   const navigate = useNavigate();
 
@@ -21,7 +23,9 @@ function Home() {
       <p className="text-lg text-gray-600 mb-8 text-center w-2/3">
         Capture your thoughts, ideas, and reminders instantly. All your notes are safely stored in your browser using localStorage — no login required!
       </p>
+   
       <div className="relative group">
+       
         <button
           onClick={() => navigate('/online-notes')}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg transition-all"
@@ -36,8 +40,11 @@ function Home() {
       <span>Press</span>
       <span className="font-semibold text-blue-400">Enter</span>
       <span className="text-blue-400">⏎</span>
+     
+   
       
     </div>
+
     {/* Tail pointing upwards */}
     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-b-4 border-b-gray-900 rotate-180"></div>
   </div>

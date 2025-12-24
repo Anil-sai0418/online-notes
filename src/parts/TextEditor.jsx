@@ -20,7 +20,7 @@ const TextEditor = ({
     onSelect={handleSelectionChange}
     onPaste={handlePaste}
     placeholder="Start typing... (Paste images with Ctrl+V)"
-    className={`w-full h-full resize-none outline-none ${
+    className={`w-full h-full  resize-none outline-none ${
       darkMode ? 'bg-gray-800 placeholder-gray-500' : 'bg-white placeholder-gray-400'
     }`}
     style={{
