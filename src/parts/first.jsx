@@ -426,6 +426,7 @@ const AppleNotes = () => {
                     globalTextColor={globalTextColor}
                     setGlobalTextColor={setGlobalTextColor}
                     darkMode={darkMode}
+                    contentRef={contentRef}
                   />
 
                   <div className="flex-1 overflow-y-auto">

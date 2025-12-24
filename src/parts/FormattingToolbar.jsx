@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown } from 'lucide-react';
 
 const FormattingToolbar = ({
   currentNote,
@@ -14,17 +14,82 @@ const FormattingToolbar = ({
   handleFontSizeChange,
   globalTextColor,
   setGlobalTextColor,
-  darkMode
+  darkMode,
+  contentRef
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [totalMatches, setTotalMatches] = useState(0);
 
   const handleSearch = (value) => {
     setSearchQuery(value);
-    if (value) {
-      window.find(value);
+    
+    if (!value || !contentRef?.current) {
+      setTotalMatches(0);
+      setCurrentMatchIndex(0);
+      return;
     }
+
+    const content = currentNote.content.toLowerCase();
+    const searchTerm = value.toLowerCase();
+    
+    // Count total matches
+    const matches = [];
+    let index = content.indexOf(searchTerm);
+    while (index !== -1) {
+      matches.push(index);
+      index = content.indexOf(searchTerm, index + 1);
+    }
+    
+    setTotalMatches(matches.length);
+    setCurrentMatchIndex(matches.length > 0 ? 0 : 0);
   };
+
+  const navigateMatch = (direction) => {
+    if (!searchQuery || totalMatches === 0 || !contentRef?.current) return;
+
+    const content = currentNote.content.toLowerCase();
+    const searchTerm = searchQuery.toLowerCase();
+    
+    // Find all matches from top to bottom
+    const matches = [];
+    let index = content.indexOf(searchTerm);
+    while (index !== -1) {
+      matches.push(index);
+      index = content.indexOf(searchTerm, index + 1);
+    }
+
+    // Calculate new index
+    let newIndex = currentMatchIndex + direction;
+    if (newIndex < 0) newIndex = matches.length - 1;
+    if (newIndex >= matches.length) newIndex = 0;
+    
+    setCurrentMatchIndex(newIndex);
+    
+    // Highlight the match and scroll to it
+    const matchPos = matches[newIndex];
+    const textarea = contentRef.current;
+    
+    // Set selection
+    textarea.focus();
+    textarea.setSelectionRange(matchPos, matchPos + searchQuery.length);
+    
+    // Calculate proper scroll position
+    const textBeforeMatch = content.substring(0, matchPos);
+    const linesBeforeMatch = textBeforeMatch.split('\n').length;
+    const lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight) || 24;
+    const targetScroll = (linesBeforeMatch - 3) * lineHeight; // Show match near top with some padding
+    
+    textarea.scrollTop = Math.max(0, targetScroll);
+  };
+
+  // Reset search when note changes
+  useEffect(() => {
+    setSearchQuery('');
+    setCurrentMatchIndex(0);
+    setTotalMatches(0);
+  }, [currentNote.id]);
 
   return (
   <div className={`relative flex flex-col border-b w-full ${
@@ -202,7 +267,7 @@ const FormattingToolbar = ({
       </div>
     </div>
     {isSearchOpen && (
-      <div className={`absolute right-4 top-full mt-2 z-50 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg border ${
+      <div className={`static mt-3 mx-3 md:mx-0 md:absolute md:right-4 md:top-full md:mt-3 z-50 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg border w-full md:w-auto ${
         darkMode
           ? 'bg-[#111111] border-gray-700'
           : 'bg-white border-gray-200'
@@ -212,16 +277,48 @@ const FormattingToolbar = ({
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search in note..."
-          className={`w-48 text-sm outline-none bg-transparent ${
+          autoFocus
+          className={`flex-1 min-w-0 text-sm outline-none bg-transparent ${
             darkMode ? 'text-white placeholder-gray-400' : 'text-gray-800 placeholder-gray-500'
           }`}
         />
+        {totalMatches > 0 && (
+          <div className="flex items-center gap-1 shrink-0">
+            <span className={`text-xs font-medium whitespace-nowrap ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            }`} title="Click arrows to jump to matches">
+              {currentMatchIndex + 1}/{totalMatches}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => navigateMatch(-1)}
+                className={`p-1 rounded transition-colors ${
+                  darkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                title="Previous match (selects text)"
+              >
+                <ChevronUp size={14} />
+              </button>
+              <button
+                onClick={() => navigateMatch(1)}
+                className={`p-1 rounded transition-colors ${
+                  darkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                title="Next match (selects text)"
+              >
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        )}
         <button
           onClick={() => {
             setIsSearchOpen(false);
             setSearchQuery('');
+            setTotalMatches(0);
+            setCurrentMatchIndex(0);
           }}
-          className={`text-xs px-2 py-1 rounded-md ${
+          className={`text-xs px-2 py-1 rounded-md shrink-0 flex items-center justify-center ${
             darkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-600'
           }`}
         >
