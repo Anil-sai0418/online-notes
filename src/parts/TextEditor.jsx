@@ -19,9 +19,11 @@ const TextEditor = ({
     onChange={(e) => updateNoteContent(e.target.value)}
     onSelect={handleSelectionChange}
     onPaste={handlePaste}
-    placeholder="Start typing... (Paste images with Ctrl+V)"
-    className={`w-full h-full resize-none outline-none ${
-      darkMode ? 'bg-gray-800 placeholder-gray-500' : 'bg-white placeholder-gray-400'
+    placeholder="Start typing... "
+    className={`w-full h-full resize-none outline-none px-4 py-3 rounded-xl transition-colors duration-200 leading-relaxed tracking-wide ${
+      darkMode 
+        ? 'bg-[#0f0f0f] text-gray-200 placeholder-gray-500 focus:bg-[#111111]' 
+        : 'bg-[#fafafa] text-gray-800 placeholder-gray-400 focus:bg-white'
     }`}
     style={{
       color: globalTextColor,
@@ -29,6 +31,9 @@ const TextEditor = ({
       fontWeight: globalIsBold ? 'bold' : 'normal',
       fontStyle: globalIsItalic ? 'italic' : 'normal',
       textDecoration: globalIsUnderline ? 'underline' : 'none',
+      boxShadow: darkMode
+        ? 'inset 0 0 0 1px rgba(255,255,255,0.05)'
+        : 'inset 0 0 0 1px rgba(0,0,0,0.05)',
     }}
   />
 );
