@@ -15,7 +15,9 @@ const AppleNotes = () => {
       title: 'Welcome to Notes', 
       content: 'Start typing to create your first note...', 
       images: [],
-      timestamp: new Date() 
+      timestamp: new Date(), // For backward compatibility (same as createdAt)
+      createdAt: new Date(),
+      lastEditedAt: null // null means never edited after creation
     }
   ]);
   const [activeNote, setActiveNote] = useState(1);
@@ -31,6 +33,7 @@ const AppleNotes = () => {
   const [globalIsUnderline, setGlobalIsUnderline] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '' });
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -41,16 +44,99 @@ const AppleNotes = () => {
     }, 2500);
   }, []);
 
+  // Load notes and settings from localStorage on mount
   useEffect(() => {
     const storedNotes = localStorage.getItem('notes');
     if (storedNotes) {
-      setNotes(JSON.parse(storedNotes));
+      const parsedNotes = JSON.parse(storedNotes);
+      
+      // Migrate old notes to new format with createdAt and lastEditedAt
+      const migratedNotes = parsedNotes.map(note => ({
+        ...note,
+        createdAt: note.createdAt || note.timestamp || new Date(),
+        lastEditedAt: note.lastEditedAt !== undefined ? note.lastEditedAt : null
+      }));
+      
+      setNotes(migratedNotes);
+
+      // Load active note and validate it exists
+      const storedActiveNote = localStorage.getItem('activeNote');
+      if (storedActiveNote) {
+        const activeId = parseInt(storedActiveNote);
+        // Check if the stored activeNote still exists in the notes
+        const noteExists = migratedNotes.some(n => n.id === activeId);
+        if (noteExists) {
+          setActiveNote(activeId);
+        } else if (migratedNotes.length > 0) {
+          // If stored note doesn't exist, use the first note
+          setActiveNote(migratedNotes[0].id);
+        }
+      }
+    } else {
+      // No stored notes, use default
+      const storedActiveNote = localStorage.getItem('activeNote');
+      if (storedActiveNote) {
+        setActiveNote(parseInt(storedActiveNote));
+      }
+    }
+
+    // Load formatting settings
+    const storedFontSize = localStorage.getItem('globalFontSize');
+    if (storedFontSize) {
+      setGlobalFontSize(parseInt(storedFontSize));
+    }
+
+    const storedIsBold = localStorage.getItem('globalIsBold');
+    if (storedIsBold !== null) {
+      setGlobalIsBold(storedIsBold === 'true');
+    }
+
+    const storedIsItalic = localStorage.getItem('globalIsItalic');
+    if (storedIsItalic !== null) {
+      setGlobalIsItalic(storedIsItalic === 'true');
+    }
+
+    const storedIsUnderline = localStorage.getItem('globalIsUnderline');
+    if (storedIsUnderline !== null) {
+      setGlobalIsUnderline(storedIsUnderline === 'true');
+    }
+
+    const storedTextColor = localStorage.getItem('globalTextColor');
+    if (storedTextColor) {
+      setGlobalTextColor(storedTextColor);
     }
   }, []);
 
+  // Save notes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('notes', JSON.stringify(notes));
   }, [notes]);
+
+  // Save active note to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('activeNote', activeNote.toString());
+  }, [activeNote]);
+
+  // Save formatting settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('globalFontSize', globalFontSize.toString());
+  }, [globalFontSize]);
+
+  useEffect(() => {
+    localStorage.setItem('globalIsBold', globalIsBold.toString());
+  }, [globalIsBold]);
+
+  useEffect(() => {
+    localStorage.setItem('globalIsItalic', globalIsItalic.toString());
+  }, [globalIsItalic]);
+
+  useEffect(() => {
+    localStorage.setItem('globalIsUnderline', globalIsUnderline.toString());
+  }, [globalIsUnderline]);
+
+  useEffect(() => {
+    localStorage.setItem('globalTextColor', globalTextColor);
+  }, [globalTextColor]);
 
   const currentNote = notes.find(n => n.id === activeNote);
 
@@ -84,7 +170,9 @@ const AppleNotes = () => {
       title: 'New Note',
       content: '',
       images: [],
-      timestamp: new Date()
+      timestamp: new Date(), // For backward compatibility
+      createdAt: new Date(),
+      lastEditedAt: null // Never edited yet
     };
     setNotes([newNote, ...notes]);
     setActiveNote(newNote.id);
@@ -113,7 +201,8 @@ const AppleNotes = () => {
             ...n, 
             content, 
             title: content.split('\n')[0].substring(0, 30) || 'New Note',
-            timestamp: new Date(),
+            timestamp: new Date(), // For backward compatibility
+            lastEditedAt: new Date(), // Mark as edited
             images: n.images || []
           } 
         : n
@@ -160,16 +249,26 @@ const AppleNotes = () => {
   const formatDate = (date) => {
     const now = new Date();
     const noteDate = new Date(date);
-    const diffTime = Math.abs(now - noteDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Get the start of today and the note's day (midnight) for accurate day comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const noteDay = new Date(noteDate.getFullYear(), noteDate.getMonth(), noteDate.getDate());
+    
+    // Calculate difference in days
+    const diffTime = today - noteDay;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
+      // Today - show time
       return noteDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     } else if (diffDays === 1) {
+      // Yesterday
       return 'Yesterday';
-    } else if (diffDays < 7) {
+    } else if (diffDays < 7 && diffDays > 0) {
+      // Within last week - show day name
       return noteDate.toLocaleDateString('en-US', { weekday: 'long' });
     } else {
+      // Older - show date
       return noteDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
   };
@@ -198,7 +297,7 @@ const AppleNotes = () => {
         showToast('New note created');
       }
 
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'Backspace' || e.key === 'Delete')) {
+      if (e.ctrlKey && (e.key === 'Backspace' || e.key === 'Delete')) {
         e.preventDefault();
         if (currentNote) {
           deleteNote(currentNote.id);
@@ -217,15 +316,25 @@ const AppleNotes = () => {
   };
 
   const simpleEncrypt = (text, password) => {
-    return btoa(unescape(encodeURIComponent(text.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join(''))));
+    // Add a verification marker at the start
+    const marker = '::VALID::';
+    const textWithMarker = marker + text;
+    return btoa(unescape(encodeURIComponent(textWithMarker.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join(''))));
   };
   
   const simpleDecrypt = (data, password) => {
     try {
       const decoded = decodeURIComponent(escape(atob(data)));
-      return decoded.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join('');
+      const decrypted = decoded.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join('');
+      
+      // Check if the marker is present
+      const marker = '::VALID::';
+      if (decrypted.startsWith(marker)) {
+        return decrypted.substring(marker.length); // Remove marker and return actual content
+      }
+      return null; // Invalid password
     } catch {
-      return '';
+      return null;
     }
   };
 
@@ -234,6 +343,8 @@ const AppleNotes = () => {
   const [setPasswordMode, setSetPasswordMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [lastPassword, setLastPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 
   const handleSetPassword = (noteId) => {
     setPasswordPrompt({ open: true, noteId });
@@ -265,7 +376,12 @@ const AppleNotes = () => {
   const handlePasswordSubmit = () => {
     if (setPasswordMode) {
       if (!newPassword || newPassword.length < 4) {
-        showToast('Password must be at least 4 characters');
+        setPasswordError(true);
+        setPasswordErrorMessage('Password must be at least 4 characters');
+        setTimeout(() => {
+          setPasswordError(false);
+          setPasswordErrorMessage('');
+        }, 3000);
         return;
       }
       setNotes(notes.map(n => n.id === passwordPrompt.noteId ? {
@@ -276,22 +392,47 @@ const AppleNotes = () => {
       } : n));
       setLastPassword(newPassword);
       setPasswordPrompt({ open: false, noteId: null });
+      setPasswordError(false);
+      setPasswordErrorMessage('');
       showToast('Password set successfully');
     } else {
       const note = notes.find(n => n.id === passwordPrompt.noteId);
-      const decrypted = note && note.encryptedContent ? simpleDecrypt(note.encryptedContent, passwordInput) : '';
-      if (note && note.encryptedContent && decrypted && decrypted.length > 0) {
+      if (!note || !note.encryptedContent) {
+        setPasswordError(true);
+        setPasswordErrorMessage('No encrypted content found');
+        setTimeout(() => {
+          setPasswordError(false);
+          setPasswordErrorMessage('');
+        }, 3000);
+        return;
+      }
+      
+      const decrypted = simpleDecrypt(note.encryptedContent, passwordInput);
+      
+      if (decrypted !== null) {
+        // Password is correct - store encrypted content for re-locking but clear content field
         setNotes(notes.map(n => n.id === passwordPrompt.noteId ? {
           ...n,
-          content: decrypted,
-          encryptedContent: '',
+          content: decrypted, // Set the decrypted content
           passwordProtected: false
+          // Keep encryptedContent stored for future re-locking if needed
         } : n));
         setLastPassword(passwordInput);
         setPasswordPrompt({ open: false, noteId: null });
+        setPasswordInput(''); // Clear password input
+        setPasswordError(false);
+        setPasswordErrorMessage('');
         showToast('Note unlocked successfully');
       } else {
-        showToast('Incorrect password');
+        // Password is incorrect
+        setPasswordError(true);
+        setPasswordErrorMessage('Incorrect password. Please try again.');
+        setPasswordInput(''); // Clear the input for retry
+        // Remove error state after animation
+        setTimeout(() => {
+          setPasswordError(false);
+          setPasswordErrorMessage('');
+        }, 3000);
       }
     }
   };
@@ -309,22 +450,24 @@ const AppleNotes = () => {
   return (
     <div className={`h-screen flex ${darkMode ? 'bg-[#1a1a1a] text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="flex-1 flex relative overflow-hidden">
-        <Sidebar
-          notes={notes}
-          filteredNotes={filteredNotes}
-          activeNote={activeNote}
-          setActiveNote={setActiveNote}
-          addNote={addNote}
-          deleteNote={deleteNote}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          searchInputRef={searchInputRef}
-          isMobileSidebarOpen={isMobileSidebarOpen}
-          setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-          navigateHome={navigateHome}
-        />
+        {!isFullscreen && (
+          <Sidebar
+            notes={notes}
+            filteredNotes={filteredNotes}
+            activeNote={activeNote}
+            setActiveNote={setActiveNote}
+            addNote={addNote}
+            deleteNote={deleteNote}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            searchInputRef={searchInputRef}
+            isMobileSidebarOpen={isMobileSidebarOpen}
+            setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+            navigateHome={navigateHome}
+          />
+        )}
 
         {/* Mobile overlay */}
         {isMobileSidebarOpen && (
@@ -373,45 +516,6 @@ const AppleNotes = () => {
                 </div>
               ) : (
                 <>
-                  {/* Password Controls */}
-                  <div className={`flex items-center gap-2 px-4 py-3 border-b ${
-                    darkMode ? 'border-gray-800 bg-gray-800/50' : 'border-gray-100 bg-gray-50'
-                  }`}>
-                    <button 
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => handleSetPassword(currentNote.id)}
-                    >
-                      <Lock size={14} />
-                      Set Password
-                    </button>
-                    {currentNote.encryptedContent && (
-                      <button 
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          darkMode 
-                            ? 'bg-red-600/20 hover:bg-red-600/30 text-red-400' 
-                            : 'bg-red-50 hover:bg-red-100 text-red-600'
-                        }`}
-                        onClick={() => handleRemovePassword(currentNote.id)}
-                      >
-                        <ShieldOff size={14} />
-                        Remove Password
-                      </button>
-                    )}
-                    {lastPassword && (
-                      <button 
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          darkMode 
-                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        }`}
-                        onClick={() => handleLockNote(currentNote.id)}
-                      >
-                        <Lock size={14} />
-                        Lock Note
-                      </button>
-                    )}
-                  </div>
-
                   <FormattingToolbar
                     currentNote={currentNote}
                     setIsMobileSidebarOpen={setIsMobileSidebarOpen}
@@ -427,10 +531,17 @@ const AppleNotes = () => {
                     setGlobalTextColor={setGlobalTextColor}
                     darkMode={darkMode}
                     contentRef={contentRef}
+                    onSetPassword={handleSetPassword}
+                    onLockNote={handleLockNote}
+                    onRemovePassword={handleRemovePassword}
+                    lastPassword={lastPassword}
+                    onDropdownStateChange={setIsDropdownOpen}
+                    isFullscreen={isFullscreen}
+                    setIsFullscreen={setIsFullscreen}
                   />
 
                   <div className="flex-1 overflow-y-auto">
-                    <div className="w-full h-full p-6 max-w-4xl mx-auto">
+                    <div className="w-full h-full p-6 max-w-4xl lg:max-w-6xl xl:max-w-7xl mx-auto">
                       <ImagesGrid
                         currentNote={currentNote}
                         notes={notes}
@@ -461,7 +572,11 @@ const AppleNotes = () => {
 
       {/* Toast Notification */}
       {toast.visible && (
-        <div className="fixed z-50 animate-slide-in bottom-6 left-1/2 -translate-x-1/2 md:top-40 md:left-auto md:right-6 md:bottom-auto md:translate-x-0">
+        <div className={`fixed z-50 animate-slide-in ${
+          isDropdownOpen 
+            ? 'bottom-6 left-1/2 -translate-x-1/2' // Dropdown open: centered at bottom on all screens
+            : 'bottom-6 left-1/2 -translate-x-1/2 md:top-[100px] md:left-auto md:right-6 md:bottom-auto md:translate-x-0' // Dropdown closed: normal position
+        }`}>
           <div className={`px-4 py-3 rounded-lg shadow-xl border flex items-center gap-2 ${
             darkMode 
               ? 'bg-gray-800 border-gray-700 text-white' 
@@ -529,21 +644,47 @@ const AppleNotes = () => {
               {/* Input */}
               <input
                 type="password"
-                className={`w-full px-4 py-3 rounded-xl border text-center font-medium tracking-wide focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                className={`w-full px-4 py-3 rounded-xl border text-center font-medium tracking-wide focus:outline-none focus:ring-2 transition-all ${
+                  passwordError 
+                    ? 'border-red-500 focus:ring-red-500 animate-shake' 
+                    : 'focus:ring-blue-500'
+                } ${
                   darkMode
                     ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
                     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                 }`}
                 value={setPasswordMode ? newPassword : passwordInput}
-                onChange={(e) =>
+                onChange={(e) => {
+                  setPasswordError(false);
+                  setPasswordErrorMessage('');
                   setPasswordMode
                     ? setNewPassword(e.target.value)
-                    : setPasswordInput(e.target.value)
-                }
+                    : setPasswordInput(e.target.value);
+                }}
                 placeholder={setPasswordMode ? 'Enter password (min 4 chars)' : 'Enter password'}
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
               />
+
+              {/* Error Message */}
+              {passwordError && passwordErrorMessage && (
+                <div className={`mt-3 px-4 py-2.5 rounded-lg flex items-center gap-2 ${
+                  darkMode 
+                    ? 'bg-red-500/10 border border-red-500/20' 
+                    : 'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className={`text-sm font-medium ${
+                    darkMode ? 'text-red-400' : 'text-red-600'
+                  }`}>
+                    {passwordErrorMessage}
+                  </p>
+                </div>
+              )}
 
               {/* Action Button */}
               <button

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Search, Sun, Moon, X, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Search, Sun, Moon, X, ChevronLeft, ArrowLeft } from 'lucide-react';
 
 const Sidebar = ({
   notes,
@@ -23,16 +23,26 @@ const Sidebar = ({
   const formatDate = (date) => {
     const now = new Date();
     const noteDate = new Date(date);
-    const diffTime = Math.abs(now - noteDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Get the start of today and the note's day (midnight) for accurate day comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const noteDay = new Date(noteDate.getFullYear(), noteDate.getMonth(), noteDate.getDate());
+    
+    // Calculate difference in days
+    const diffTime = today - noteDay;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
+      // Today - show time
       return noteDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     } else if (diffDays === 1) {
+      // Yesterday
       return 'Yesterday';
-    } else if (diffDays < 7) {
+    } else if (diffDays < 7 && diffDays > 0) {
+      // Within last week - show day name
       return noteDate.toLocaleDateString('en-US', { weekday: 'long' });
     } else {
+      // Older - show date
       return noteDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
   };
@@ -67,40 +77,65 @@ const Sidebar = ({
               </button>
             )}
 
-            <h1
-              onClick={() => navigate('/')}
-              className={`text-lg font-semibold cursor-pointer truncate hover:opacity-80 ${
-                darkMode ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              My Notes
-            </h1>
-          </div>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2">
             <button
-              onClick={addNote}
+              onClick={() => navigate('/')}
               className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                font-medium text-sm transition-all duration-150
+                flex items-center justify-center
+                h-10 px-6 rounded-full
+                text-sm font-semibold tracking-wide
+                transition-all duration-200
                 ${darkMode
-                  ? ' bg-gray-600 text-gray'
-                  : ' hover:bg-gray-200 bg-gray-100 text-gray-600'
+                  ? 'bg-transparent text-white border border-gray-700 hover:bg-gray-800/40'
+                  : 'bg-transparent text-gray-900 border border-gray-300 hover:bg-gray-100'
                 }
               `}
             >
+              <span>SCRIBYX</span>
+             
+            </button>
+          </div>
+
+          {/* Right: Actions */}
+          <div
+            className={`
+              flex items-center gap-1
+              h-10 px-2 rounded-full
+              ${darkMode
+                ? 'bg-transparent border border-gray-700'
+                : 'bg-transparent border border-gray-300'
+              }
+            `}
+          >
+            <button
+              onClick={addNote}
+              className={`
+                flex items-center justify-center
+                w-9 h-9 rounded-full
+                transition-colors duration-150
+                ${darkMode
+                  ? 'text-gray-200 hover:bg-gray-800'
+                  : 'text-gray-700 hover:bg-gray-200'
+                }
+              `}
+              title="New note"
+            >
               <Plus size={16} />
-              New
             </button>
 
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode ? 'bg-gray-600 text-white' : 'hover:bg-gray-200 bg-gray-100 text-gray-600'
-              }`}
+              className={`
+                flex items-center justify-center
+                w-9 h-9 rounded-full
+                transition-colors duration-150
+                ${darkMode
+                  ? 'text-gray-200 hover:bg-gray-800'
+                  : 'text-gray-700 hover:bg-gray-200'
+                }
+              `}
+              title="Toggle theme"
             >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
         </div>
@@ -203,9 +238,10 @@ const Sidebar = ({
                   >
                     <Trash2 size={14} />
                     {/* Shortcut Tooltip */}
-                    <span
+                  <span
                       className={`
                         pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1
+                        flex items-center
                         whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-medium
                         opacity-0 group-hover:opacity-100 transition-opacity duration-150
                         ${darkMode
@@ -214,7 +250,11 @@ const Sidebar = ({
                         }
                       `}
                     >
-                      ^ + D
+                      <span className="flex items-center gap-1">
+                        <span>^</span>
+                        <span>+</span>
+                        <ArrowLeft size={12} />
+                      </span>
                     </span>
                   </button>
                 </div>

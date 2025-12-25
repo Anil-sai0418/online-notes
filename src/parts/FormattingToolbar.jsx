@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown, Fullscreen, Unlock, ShieldOff } from 'lucide-react';
 
 const FormattingToolbar = ({
   currentNote,
@@ -15,12 +15,77 @@ const FormattingToolbar = ({
   globalTextColor,
   setGlobalTextColor,
   darkMode,
-  contentRef
+  contentRef,
+  onSetPassword,
+  onLockNote,
+  onRemovePassword,
+  lastPassword,
+  onDropdownStateChange,
+  isFullscreen,
+  setIsFullscreen
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+  const mobileSettingsRef = useRef(null);
+  const [, setUpdateTrigger] = useState(0); // For forcing re-renders to update time
+
+  // Update the time display every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setUpdateTrigger(prev => prev + 1);
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Smart format: show "Created" if never edited, "Last edited" if edited
+  const formatNoteTime = (note) => {
+    const now = new Date();
+    
+    // Check if note has been edited (lastEditedAt exists and is not null)
+    const hasBeenEdited = note.lastEditedAt && note.lastEditedAt !== null;
+    
+    // Use the appropriate timestamp
+    const relevantDate = hasBeenEdited ? new Date(note.lastEditedAt) : new Date(note.createdAt || note.timestamp);
+    const prefix = hasBeenEdited ? 'Last edited' : 'Created';
+    
+    const diffMs = now - relevantDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    
+    // Get the start of today and the note's day (midnight) for accurate day comparison
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const noteDay = new Date(relevantDate.getFullYear(), relevantDate.getMonth(), relevantDate.getDate());
+    const diffTime = today - noteDay;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) {
+      return `${prefix} just now`;
+    } else if (diffMins < 60) {
+      return `${prefix} ${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+    } else if (diffHours < 24) {
+      return `${prefix} ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else if (diffDays === 0) {
+      return `${prefix} today at ${relevantDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+    } else if (diffDays === 1) {
+      return `${prefix} yesterday`;
+    } else if (diffDays < 7) {
+      return `${prefix} on ${relevantDate.toLocaleDateString('en-US', { weekday: 'long' })}`;
+    } else {
+      return `${prefix} on ${relevantDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: diffDays > 365 ? 'numeric' : undefined })}`;
+    }
+  };
+
+  // Notify parent about dropdown state changes
+  useEffect(() => {
+    if (onDropdownStateChange) {
+      onDropdownStateChange(isSearchOpen || isSettingsOpen);
+    }
+  }, [isSearchOpen, isSettingsOpen, onDropdownStateChange]);
 
   const handleSearch = (value) => {
     setSearchQuery(value);
@@ -46,7 +111,7 @@ const FormattingToolbar = ({
     setCurrentMatchIndex(matches.length > 0 ? 0 : 0);
   };
 
-  const navigateMatch = (direction) => {
+  const navigateMatch = useCallback((direction) => {
     if (!searchQuery || totalMatches === 0 || !contentRef?.current) return;
 
     const content = currentNote.content.toLowerCase();
@@ -82,7 +147,8 @@ const FormattingToolbar = ({
     const targetScroll = (linesBeforeMatch - 3) * lineHeight; // Show match near top with some padding
     
     textarea.scrollTop = Math.max(0, targetScroll);
-  };
+  }, [searchQuery, totalMatches, contentRef, currentNote.content, currentMatchIndex]);
+
 
   // Reset search when note changes
   useEffect(() => {
@@ -90,6 +156,45 @@ const FormattingToolbar = ({
     setCurrentMatchIndex(0);
     setTotalMatches(0);
   }, [currentNote.id]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        return;
+      }
+
+      if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (e.key === 'ArrowUp') {
+          navigateMatch(-1);
+        } else {
+          navigateMatch(1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSearchOpen, searchQuery, totalMatches, currentMatchIndex, navigateMatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target) &&
+          mobileSettingsRef.current && !mobileSettingsRef.current.contains(e.target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
 
   return (
   <div className={`relative flex flex-col border-b w-full ${
@@ -126,7 +231,7 @@ const FormattingToolbar = ({
                   darkMode ? 'text-gray-400' : 'text-gray-500'
                 }`}
               >
-                Last edited just now
+                {formatNoteTime(currentNote)}
               </span>
             </div>
           </div>
@@ -137,18 +242,8 @@ const FormattingToolbar = ({
                 darkMode ? 'bg-[#111111]' : 'bg-gray-100'
               }`}
             >
-              <button
-                className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
-                  darkMode
-                    ? 'hover:bg-gray-800 text-gray-300'
-                    : 'hover:bg-white text-gray-700'
-                }`}
-                title="Lock Note"
-              >
-                <Lock size={18} />
-              </button>
 
-              <button
+               <button
                 onClick={() => setIsSearchOpen(prev => !prev)}
                 className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
                   darkMode
@@ -162,14 +257,98 @@ const FormattingToolbar = ({
 
               <button
                 className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
-                  darkMode
-                    ? 'hover:bg-gray-800 text-gray-300'
-                    : 'hover:bg-white text-gray-700'
+                  isFullscreen
+                    ? darkMode 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-blue-500 text-white'
+                    : darkMode
+                      ? 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-white text-gray-700'
                 }`}
-                title="Settings"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Mode"}
               >
-                <Settings size={18} />
+                <Fullscreen size={18} />
               </button>
+
+             
+
+              <div className="relative" ref={mobileSettingsRef}>
+                <button
+                  onClick={() => setIsSettingsOpen(prev => !prev)}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
+                    darkMode
+                      ? 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-white text-gray-700'
+                  }`}
+                  title="Settings"
+                >
+                  <Settings size={18} />
+                </button>
+
+                {isSettingsOpen && (
+                  <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-50 py-1 ${
+                    darkMode
+                      ? 'bg-[#111111] border-gray-700'
+                      : 'bg-white border-gray-200'
+                  }`}>
+                    {/* Set Password Option */}
+                    <button
+                      onClick={() => {
+                        setIsSettingsOpen(false);
+                        onSetPassword(currentNote.id);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                        darkMode
+                          ? 'hover:bg-gray-800 text-gray-200'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      <Lock size={16} className="text-blue-500" />
+                      <span>Set Password</span>
+                    </button>
+
+                    {/* Lock Note Option - only show if password is already set */}
+                    {lastPassword && !currentNote.passwordProtected && (
+                      <button
+                        onClick={() => {
+                          setIsSettingsOpen(false);
+                          onLockNote(currentNote.id);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                          darkMode
+                            ? 'hover:bg-gray-800 text-gray-200'
+                            : 'hover:bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        <Lock size={16} className="text-yellow-500" />
+                        <span>Lock Note Now</span>
+                      </button>
+                    )}
+
+                    {/* Remove Password Option - only show if encrypted content exists */}
+                    {currentNote.encryptedContent && (
+                      <>
+                        <div className={`h-px my-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+                        <button
+                          onClick={() => {
+                            setIsSettingsOpen(false);
+                            onRemovePassword(currentNote.id);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            darkMode
+                              ? 'hover:bg-gray-800 text-red-400'
+                              : 'hover:bg-gray-100 text-red-600'
+                          }`}
+                        >
+                          <ShieldOff size={16} />
+                          <span>Remove Password</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -333,16 +512,6 @@ const FormattingToolbar = ({
           darkMode ? 'bg-[#111111]' : 'bg-gray-100'
         }`}
       >
-        <button
-          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
-            darkMode
-              ? 'hover:bg-gray-800 text-gray-300'
-              : 'hover:bg-white text-gray-700'
-          }`}
-          title="Lock Note"
-        >
-          <Lock size={18} />
-        </button>
 
         <button
           onClick={() => setIsSearchOpen(prev => !prev)}
@@ -355,17 +524,98 @@ const FormattingToolbar = ({
         >
           <Search size={18} />
         </button>
-
         <button
           className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
-            darkMode
-              ? 'hover:bg-gray-800 text-gray-300'
-              : 'hover:bg-white text-gray-700'
+            isFullscreen
+              ? darkMode 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-blue-500 text-white'
+              : darkMode
+                ? 'hover:bg-gray-800 text-gray-300'
+                : 'hover:bg-white text-gray-700'
           }`}
-          title="Settings"
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Mode"}
         >
-          <Settings size={18} />
+          <Fullscreen size={18} />
         </button>
+
+        <div className="relative" ref={settingsRef}>
+          <button
+            onClick={() => setIsSettingsOpen(prev => !prev)}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${
+              darkMode
+                ? 'hover:bg-gray-800 text-gray-300'
+                : 'hover:bg-white text-gray-700'
+            }`}
+            title="Settings"
+          >
+            <Settings size={18} />
+          </button>
+
+          {isSettingsOpen && (
+            <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-50 py-1 ${
+              darkMode
+                ? 'bg-[#111111] border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}>
+              {/* Set Password Option */}
+              <button
+                onClick={() => {
+                  setIsSettingsOpen(false);
+                  onSetPassword(currentNote.id);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                  darkMode
+                    ? 'hover:bg-gray-800 text-gray-200'
+                    : 'hover:bg-gray-100 text-gray-700'
+                }`}
+              >
+                <Lock size={16} className="text-blue-500" />
+                <span>Set Password</span>
+              </button>
+
+              {/* Lock Note Option - only show if password is already set */}
+              {lastPassword && !currentNote.passwordProtected && (
+                <button
+                  onClick={() => {
+                    setIsSettingsOpen(false);
+                    onLockNote(currentNote.id);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                    darkMode
+                      ? 'hover:bg-gray-800 text-gray-200'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <Lock size={16} className="text-yellow-500" />
+                  <span>Lock Note Now</span>
+                </button>
+              )}
+
+              {/* Remove Password Option - only show if encrypted content exists */}
+              {currentNote.encryptedContent && (
+                <>
+                  <div className={`h-px my-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+                  <button
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      onRemovePassword(currentNote.id);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                      darkMode
+                        ? 'hover:bg-gray-800 text-red-400'
+                        : 'hover:bg-gray-100 text-red-600'
+                    }`}
+                  >
+                    <ShieldOff size={16} />
+                    <span>Remove Password</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
     </div>
