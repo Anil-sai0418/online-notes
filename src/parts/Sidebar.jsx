@@ -1,14 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Search, Sun, Moon, X, ChevronLeft, ArrowLeft } from 'lucide-react';
+import { Plus,  Search, Sun, Moon, X, ChevronLeft, } from 'lucide-react';
 
 const Sidebar = ({
-  notes,
+
   filteredNotes,
   activeNote,
   setActiveNote,
   addNote,
-  deleteNote,
+
   darkMode,
   setDarkMode,
   searchQuery,
@@ -16,7 +16,7 @@ const Sidebar = ({
   searchInputRef,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
-  navigateHome
+
 }) => {
   const navigate = useNavigate();
 
@@ -222,41 +222,7 @@ const Sidebar = ({
                       {formatDate(note.timestamp)}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNote(note.id);
-                    }}
-                    className={`
-                      relative p-1.5 rounded-md
-                      transition-all duration-150 group
-                      ${darkMode
-                        ? 'hover:bg-gray-700 text-gray-500 hover:text-red-400'
-                        : 'hover:bg-gray-200 text-gray-400 hover:text-red-500'
-                      }
-                    `}
-                  >
-                    <Trash2 size={14} />
-                    {/* Shortcut Tooltip */}
-                  <span
-                      className={`
-                        pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1
-                        flex items-center
-                        whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-medium
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-150
-                        ${darkMode
-                          ? 'bg-gray-800 text-gray-200 border border-gray-700'
-                          : 'bg-gray-900 text-white'
-                        }
-                      `}
-                    >
-                      <span className="flex items-center gap-1">
-                        <span>^</span>
-                        <span>+</span>
-                        <ArrowLeft size={12} />
-                      </span>
-                    </span>
-                  </button>
+               
                 </div>
               </div>
             ))}

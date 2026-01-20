@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // Updated CSS for a more technical, geometric feel
@@ -51,6 +51,20 @@ const animationStyles = `
 
 function Home() {
   const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode');
+    return stored ? stored === 'true' : false;
+  });
+
+  // Listen to storage changes from other tabs/components
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('darkMode');
+      setDarkMode(stored ? stored === 'true' : false);
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -64,7 +78,11 @@ function Home() {
 
   return (
     // Changed background gradient to a cooler, sharper blue/gray tone
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-100 text-gray-900 overflow-hidden relative">
+    <div className={`min-h-screen overflow-hidden relative transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white' 
+        : 'bg-gradient-to-br from-gray-50 via-white to-blue-100 text-gray-900'
+    }`}>
       <style>{animationStyles}</style>
       
       {/* Navbar */}
@@ -74,14 +92,12 @@ function Home() {
           <div className="w-10 h-10 rounded-lg bg-blue-700 text-white flex items-center justify-center font-extrabold text-lg shadow-md shadow-blue-900/20">
             S
           </div>
-          <span className="text-xl font-semibold tracking-wide text-gray-900">
+          <span className={`text-xl font-semibold tracking-wide ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             SCRIBYX
           </span>
         </div>
 
-      
 
-      
       </header>
 
       {/* Hero Section */}
@@ -93,18 +109,30 @@ relative z-20">
         
         {/* Left Content */}
         <div className="max-w-xl text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 mb-8 text-xs font-semibold rounded-full border ${
+            darkMode
+              ? 'text-blue-400 bg-blue-900/30 border-blue-700'
+              : 'text-blue-700 bg-blue-50 border-blue-200'
+          }`}>
             <span className="w-2 h-2 bg-blue-600 rounded animate-pulse"></span>
-            BELIEVE · Notes
+            Version · 2.0
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight text-gray-900">
+          <h1 className={`text-4xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight ${
+            darkMode ? 'text-white' : 'text-gray-900'
+          }`}>
             Believe Notes<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-600">
+            <span className={`text-transparent bg-clip-text ${
+              darkMode
+                ? 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                : 'bg-gradient-to-r from-blue-700 to-cyan-600'
+            }`}>
               Think. Write. Execute.
             </span>
           </h1>
 
-          <p className="text-gray-600 text-lg mb-10 leading-relaxed">
+          <p className={`text-lg mb-10 leading-relaxed ${
+            darkMode ? 'text-gray-400' : 'text-gray-600'
+          }`}>
             A focused notes workspace to capture ideas, organize thoughts,
             and move forward without distraction.
           </p>
@@ -120,7 +148,9 @@ relative z-20">
            
           </div>
 
-          <p className="text-xs text-gray-400 mt-8 font-mono tracking-wide tracking-wider hidden sm:block">
+          <p className={`text-xs mt-8 font-mono tracking-wider hidden sm:block ${
+            darkMode ? 'text-gray-500' : 'text-gray-400'
+          }`}>
              &gt; Press [ENTER] to open notes
           </p>
         </div>
@@ -139,15 +169,23 @@ relative z-20">
 
 
           {/* --- Main Glassmorphism Card --- */}
-          <div className="relative w-full md:w-[420px] bg-white/85 backdrop-blur-xl rounded-2xl border border-white/70 shadow-2xl p-6 animate-float z-30">
+          <div className={`relative w-full md:w-[420px] backdrop-blur-xl rounded-2xl border shadow-2xl p-6 animate-float z-30 ${
+            darkMode
+              ? 'bg-gray-800/85 border-gray-700/70'
+              : 'bg-white/85 border-white/70'
+          }`}>
             {/* Card Header (More technical look) */}
-            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+            <div className={`flex items-center justify-between mb-6 border-b pb-4 ${
+              darkMode ? 'border-gray-700' : 'border-gray-100'
+            }`}>
               <div className="flex items-center gap-2">
                 <span title="Close" className="w-3 h-3 rounded-full bg-red-500 hover:brightness-110 transition"></span>
                 <span title="Minimize" className="w-3 h-3 rounded-full bg-yellow-400 hover:brightness-110 transition"></span>
                 <span title="Zoom" className="w-3 h-3 rounded-full bg-green-500 hover:brightness-110 transition"></span>
               </div>
-              <div className="text-xs font-mono text-blue-700 font-semibold">
+              <div className={`text-xs font-mono font-semibold ${
+                darkMode ? 'text-blue-400' : 'text-blue-700'
+              }`}>
                 NOTE: DAILY_THOUGHTS
               </div>
             </div>
@@ -155,30 +193,48 @@ relative z-20">
             {/* Card Content Skeleton (More structured) */}
             <div className="space-y-5">
               <div className="flex justify-between items-center">
-                 <div className="h-5 bg-gray-800/10 rounded-sm w-1/3"></div>
-                 <div className="h-3 bg-blue-100 text-blue-800 px-2 rounded-sm text-xs font-mono">STATUS: ACTIVE</div>
+                 <div className={`h-5 rounded-sm w-1/3 ${
+                   darkMode ? 'bg-gray-700/50' : 'bg-gray-800/10'
+                 }`}></div>
+                 <div className={`h-auto px-2 py-1 rounded-sm text-xs font-mono ${
+                   darkMode 
+                     ? 'bg-green-900/30 text-green-400 border border-green-700'
+                     : 'bg-blue-100 text-blue-800 border border-blue-300'
+                 }`}>STATUS: ACTIVE</div>
               </div>
-              <div className="h-3 bg-gray-200 rounded-sm w-full"></div>
-              <div className="h-3 bg-gray-200 rounded-sm w-5/6"></div>
+              <div className={`h-3 rounded-sm w-full ${darkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}></div>
+              <div className={`h-3 rounded-sm w-5/6 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}></div>
               
               {/* A code-snippet style block */}
-              <div className="mt-4 bg-gray-900 rounded-md p-4 font-mono text-xs text-green-400 shadow-inner">
+              <div className={`mt-4 rounded-md p-4 font-mono text-xs shadow-inner ${
+                darkMode
+                  ? 'bg-gray-900 text-green-400'
+                  : 'bg-gray-900 text-green-400'
+              }`}>
                 <p>• Morning thoughts</p>
                 <p className="ml-4">- Goals for today</p>
                 <p className="ml-4">- Tasks to complete</p>
-                <p className="ml-4 text-gray-500">// Stay consistent</p>
+                <p className={`ml-4 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>// Stay consistent</p>
               </div>
             </div>
 
             {/* Floating Badge 1 (Sharper, Square) */}
-            <div className="absolute -right-8 top-16 bg-white/90 backdrop-blur-md border border-gray-200 p-2 rounded-lg shadow-xl animate-float-delayed z-40">
+            <div className={`absolute -right-8 top-16 backdrop-blur-md border p-2 rounded-lg shadow-xl animate-float-delayed z-40 ${
+              darkMode
+                ? 'bg-gray-800/90 border-gray-700'
+                : 'bg-white/90 border-gray-200'
+            }`}>
               <div className="bg-gradient-to-tr from-green-500 to-emerald-600 p-2 rounded-sm shadow-inner">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ shapeRendering: 'crispEdges' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
               </div>
             </div>
 
             {/* Floating Badge 2 (Sharper, Square) */}
-            <div className="absolute -left-8 bottom-16 bg-white/90 backdrop-blur-md border border-gray-200 p-2 rounded-lg shadow-xl animate-float z-40" style={{ animationDelay: '1.5s' }}>
+            <div className={`absolute -left-8 bottom-16 backdrop-blur-md border p-2 rounded-lg shadow-xl animate-float z-40 ${
+              darkMode
+                ? 'bg-gray-800/90 border-gray-700'
+                : 'bg-white/90 border-gray-200'
+            }`} style={{ animationDelay: '1.5s' }}>
               <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-sm shadow-inner">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ shapeRendering: 'crispEdges' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
               </div>
@@ -190,7 +246,11 @@ relative z-20">
     
       
       {/* Subtle background gradient mask so the grid fades out */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white z-10 pointer-events-none"></div>
+      <div className={`absolute inset-0 z-10 pointer-events-none ${
+        darkMode
+          ? 'bg-gradient-to-b from-transparent via-gray-800/50 to-gray-900'
+          : 'bg-gradient-to-b from-transparent via-white/50 to-white'
+      }`}></div>
     </div>
   );
 }

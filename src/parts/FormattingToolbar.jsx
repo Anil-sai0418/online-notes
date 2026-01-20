@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown, Fullscreen, Unlock, ShieldOff } from 'lucide-react';
+import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown, Fullscreen, Unlock, ShieldOff, Trash2 } from 'lucide-react';
 
 const FormattingToolbar = ({
   currentNote,
@@ -344,6 +344,28 @@ const FormattingToolbar = ({
                           <ShieldOff size={16} />
                           <span>Remove Password</span>
                         </button>
+
+                        <div className={`h-px my-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+                        <button
+                          onClick={() => {
+                            setIsSettingsOpen(false);
+                            // Trigger delete with keyboard shortcut pattern
+                            const event = new KeyboardEvent('keydown', {
+                              key: 'Delete',
+                              ctrlKey: true,
+                              code: 'Delete'
+                            });
+                            window.dispatchEvent(event);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                            darkMode
+                              ? 'hover:bg-gray-800 text-red-400'
+                              : 'hover:bg-gray-100 text-red-600'
+                          }`}
+                        >
+                          <Trash2 size={16} />
+                          <span>Delete Note</span>
+                        </button>
                       </>
                     )}
                   </div>
@@ -356,12 +378,12 @@ const FormattingToolbar = ({
 
 
     <div
-      className={`flex items-center justify-start md:justify-center gap-2 px-3 py-2 border-t flex-nowrap rounded-2xl mx-2 mb-2 overflow-x-auto shadow-sm ${
+      className={`flex items-center justify-start gap-2 px-3 py-2 border-t flex-wrap md:flex-nowrap rounded-2xl mx-2 mb-2 overflow-x-auto shadow-sm ${
         darkMode ? 'bg-[#111111] border-gray-700' : 'bg-gray-50 border-gray-200'
       }`}
     >
       {/* Text Formatting Group */}
-      <div className={`flex items-center gap-1 p-1.5 rounded-xl shrink-0 shadow-inner ${
+      <div className={`flex items-center gap-1 p-1.5 rounded-xl md:shrink-0 shadow-inner ${
         darkMode ? 'bg-gray-800/60' : 'bg-white'
       }`}>
         <button
@@ -402,7 +424,7 @@ const FormattingToolbar = ({
       </div>
 
       {/* Font Size Control */}
-      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl shrink-0 shadow-inner ${
+      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-xl md:shrink-0 shadow-inner ${
         darkMode ? 'bg-gray-800/60' : 'bg-white'
       }`}>
         <button
@@ -431,7 +453,7 @@ const FormattingToolbar = ({
       </div>
 
       {/* Color Picker */}
-      <div className="relative shrink-0">
+      <div className="relative md:shrink-0">
         <input
           type="color"
           value={globalTextColor}
@@ -610,6 +632,28 @@ const FormattingToolbar = ({
                   >
                     <ShieldOff size={16} />
                     <span>Remove Password</span>
+                  </button>
+
+                  <div className={`h-px my-1 ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} />
+                  <button
+                    onClick={() => {
+                      setIsSettingsOpen(false);
+                      // Trigger delete with keyboard shortcut pattern
+                      const event = new KeyboardEvent('keydown', {
+                        key: 'Delete',
+                        ctrlKey: true,
+                        code: 'Delete'
+                      });
+                      window.dispatchEvent(event);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                      darkMode
+                        ? 'hover:bg-gray-800 text-red-400'
+                        : 'hover:bg-gray-100 text-red-600'
+                    }`}
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete Note</span>
                   </button>
                 </>
               )}
