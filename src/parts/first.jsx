@@ -21,7 +21,10 @@ const AppleNotes = () => {
     }
   ]);
   const [activeNote, setActiveNote] = useState(1);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem('darkMode');
+    return stored ? stored === 'true' : false;
+  });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
@@ -137,6 +140,11 @@ const AppleNotes = () => {
   useEffect(() => {
     localStorage.setItem('globalTextColor', globalTextColor);
   }, [globalTextColor]);
+
+  // Save dark mode preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
   const currentNote = notes.find(n => n.id === activeNote);
 
