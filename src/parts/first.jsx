@@ -5,6 +5,7 @@ import ImagesGrid from './ImagesGrid';
 import TextEditor from './TextEditor';
 import { Lock, Unlock, ShieldOff, X } from 'lucide-react';
 
+
 const AppleNotes = () => {
   // Add cursor position state
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -703,6 +704,7 @@ const AppleNotes = () => {
               </button>
             </div>
           </div>
+
         </div>
       )}
     </div>
