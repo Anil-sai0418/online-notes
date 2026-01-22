@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LockKeyhole } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Footer from './Footer';
+
 
 // Updated CSS for a more technical, geometric feel
 const animationStyles = `

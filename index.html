@@ -2,8 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon.jpeg" />
+    <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>Scribyx Notes</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SCRIBYX" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
 
     <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="M-RH5LhTnCCIBauNpdYEQx7i0dH9t1g0u-PSwKkgYxQ" />
@@ -23,7 +36,7 @@
     <meta property="og:description" content="SCRIBYX helps you write and manage notes easily with a clean and modern interface." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://online-notes-five.vercel.app/" />
-    <meta property="og:image" content="./public/icon.jpeg" />
+    <meta property="og:image" content="/icons/icon-512.png" />
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -32,7 +45,7 @@
     <meta name="twitter:image" content="/icon.jpeg" />
 
     <!-- Dummy Google Sitemap -->
-    <link rel="sitemap" type="application/xml" href="./public/sitemap.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
   </head>
   <body>
     <div id="root"></div>
