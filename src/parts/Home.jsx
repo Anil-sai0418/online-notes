@@ -78,9 +78,8 @@ function Home() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [navigate]);
 
-  return (
-    // Changed background gradient to a cooler, sharper blue/gray tone
-    <div className={`min-h-screen overflow-hidden relative transition-colors duration-300 ${
+return (
+    <div className={`min-h-screen overflow-hidden relative transition-colors duration-300 flex flex-col pt-6 sm:pt-8 md:pt-0 ${
       darkMode 
         ? 'bg-gradient-to-br from-[#0B0F19] via-[#0E1628] to-[#0B0F19] text-slate-100' 
         : 'bg-gradient-to-br from-gray-50 via-white to-blue-100 text-gray-900'
@@ -110,7 +109,7 @@ gap-12 md:gap-16
 relative z-20">
         
         {/* Left Content */}
-        <div className="max-w-xl text-center md:text-left mb-3 ">
+        <div className="max-w-xl text-center md:text-left  max-md:mt-18 mb-5 ">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 mb-8 text-xs font-semibold rounded-full border ${
             darkMode
               ? 'text-blue-400 bg-blue-900/30 border-blue-700'
@@ -122,7 +121,7 @@ relative z-20">
           <h1 className={`text-4xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight ${
             darkMode ? 'text-white' : 'text-gray-900'
           }`}>
-            Believe Notes<br />
+            Belive Notes<br />
             <span className={`text-transparent bg-clip-text ${
               darkMode
                 ? 'bg-gradient-to-r from-blue-400 to-cyan-400'
@@ -251,7 +250,7 @@ relative z-20">
       }`}>
       </div>
 
-<footer className='relative z-20 flex justify-center flex-col mt-6 items-center text-sm text-gray-700 dark:text-gray-300'>
+<footer className='relative z-20 flex justify-center flex-col mt-auto pb-4 items-center text-sm text-gray-700 dark:text-gray-300'>
   <p className="font-xs  text-gray-500 dark:text-gray-600">
     Developed by Anil
   </p>
