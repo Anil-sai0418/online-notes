@@ -11,10 +11,10 @@ const AppleNotes = () => {
   const [cursorPosition, setCursorPosition] = useState(0);
   // Update note state structure
   const [notes, setNotes] = useState([
-    { 
-      id: 1, 
-      title: 'Welcome to Notes', 
-      content: 'Start typing to create your first note...', 
+    {
+      id: 1,
+      title: 'Welcome to Notes',
+      content: 'Start typing to create your first note...',
       images: [],
       timestamp: new Date(), // For backward compatibility (same as createdAt)
       createdAt: new Date(),
@@ -30,11 +30,7 @@ const AppleNotes = () => {
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [globalTextColor, setGlobalTextColor] = useState(darkMode ? '#ffffff' : '#000000');
-  const [globalFontSize, setGlobalFontSize] = useState(16);
-  const [globalIsBold, setGlobalIsBold] = useState(false);
-  const [globalIsItalic, setGlobalIsItalic] = useState(false);
-  const [globalIsUnderline, setGlobalIsUnderline] = useState(false);
+  // Global formating state removed - moved to individual notes
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '' });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -53,14 +49,20 @@ const AppleNotes = () => {
     const storedNotes = localStorage.getItem('notes');
     if (storedNotes) {
       const parsedNotes = JSON.parse(storedNotes);
-      
-      // Migrate old notes to new format with createdAt and lastEditedAt
+
+      // Migrate old notes to new format with createdAt, lastEditedAt and formatting
       const migratedNotes = parsedNotes.map(note => ({
         ...note,
         createdAt: note.createdAt || note.timestamp || new Date(),
-        lastEditedAt: note.lastEditedAt !== undefined ? note.lastEditedAt : null
+        lastEditedAt: note.lastEditedAt !== undefined ? note.lastEditedAt : null,
+        // Default formatting if missing
+        fontSize: note.fontSize || 16,
+        isBold: note.isBold || false,
+        isItalic: note.isItalic || false,
+        isUnderline: note.isUnderline || false,
+        textColor: note.textColor || (darkMode ? '#ffffff' : '#000000') // Note: this might need to adapt to theme changes if hardcoded
       }));
-      
+
       setNotes(migratedNotes);
 
       // Load active note and validate it exists
@@ -83,32 +85,6 @@ const AppleNotes = () => {
         setActiveNote(parseInt(storedActiveNote));
       }
     }
-
-    // Load formatting settings
-    const storedFontSize = localStorage.getItem('globalFontSize');
-    if (storedFontSize) {
-      setGlobalFontSize(parseInt(storedFontSize));
-    }
-
-    const storedIsBold = localStorage.getItem('globalIsBold');
-    if (storedIsBold !== null) {
-      setGlobalIsBold(storedIsBold === 'true');
-    }
-
-    const storedIsItalic = localStorage.getItem('globalIsItalic');
-    if (storedIsItalic !== null) {
-      setGlobalIsItalic(storedIsItalic === 'true');
-    }
-
-    const storedIsUnderline = localStorage.getItem('globalIsUnderline');
-    if (storedIsUnderline !== null) {
-      setGlobalIsUnderline(storedIsUnderline === 'true');
-    }
-
-    const storedTextColor = localStorage.getItem('globalTextColor');
-    if (storedTextColor) {
-      setGlobalTextColor(storedTextColor);
-    }
   }, []);
 
   // Save notes to localStorage whenever they change
@@ -121,26 +97,7 @@ const AppleNotes = () => {
     localStorage.setItem('activeNote', activeNote.toString());
   }, [activeNote]);
 
-  // Save formatting settings to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('globalFontSize', globalFontSize.toString());
-  }, [globalFontSize]);
 
-  useEffect(() => {
-    localStorage.setItem('globalIsBold', globalIsBold.toString());
-  }, [globalIsBold]);
-
-  useEffect(() => {
-    localStorage.setItem('globalIsItalic', globalIsItalic.toString());
-  }, [globalIsItalic]);
-
-  useEffect(() => {
-    localStorage.setItem('globalIsUnderline', globalIsUnderline.toString());
-  }, [globalIsUnderline]);
-
-  useEffect(() => {
-    localStorage.setItem('globalTextColor', globalTextColor);
-  }, [globalTextColor]);
 
   // Save dark mode preference to localStorage whenever it changes
   useEffect(() => {
@@ -181,7 +138,14 @@ const AppleNotes = () => {
       images: [],
       timestamp: new Date(), // For backward compatibility
       createdAt: new Date(),
-      lastEditedAt: null // Never edited yet
+
+      lastEditedAt: null, // Never edited yet
+      // Default formatting for new notes
+      fontSize: 16,
+      isBold: false,
+      isItalic: false,
+      isUnderline: false,
+      textColor: darkMode ? '#ffffff' : '#000000'
     };
     setNotes([newNote, ...notes]);
     setActiveNote(newNote.id);
@@ -204,16 +168,28 @@ const AppleNotes = () => {
   };
 
   const updateNoteContent = (content) => {
-    setNotes(notes.map(n => 
-      n.id === activeNote 
-        ? { 
-            ...n, 
-            content, 
-            title: content.split('\n')[0].substring(0, 30) || 'New Note',
-            timestamp: new Date(), // For backward compatibility
-            lastEditedAt: new Date(), // Mark as edited
-            images: n.images || []
-          } 
+    setNotes(notes.map(n =>
+      n.id === activeNote
+        ? {
+          ...n,
+          content,
+          title: content.split('\n')[0].substring(0, 30) || 'New Note',
+          timestamp: new Date(), // For backward compatibility
+          lastEditedAt: new Date(), // Mark as edited
+          images: n.images || []
+        }
+        : n
+    ));
+  };
+
+  const updateNoteFormatting = (updates) => {
+    setNotes(notes.map(n =>
+      n.id === activeNote
+        ? {
+          ...n,
+          ...updates,
+          lastEditedAt: new Date()
+        }
         : n
     ));
   };
@@ -232,25 +208,27 @@ const AppleNotes = () => {
       if (item.type.indexOf('image') !== -1) {
         e.preventDefault();
         const file = item.getAsFile();
-        
-        try {
-          const imgUrl = URL.createObjectURL(file);
-          setNotes(notes.map(n => 
-            n.id === activeNote 
+
+        // Use FileReader to convert to Base64 for persistence
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const imgUrl = event.target.result;
+          setNotes(prevNotes => prevNotes.map(n =>
+            n.id === activeNote
               ? {
-                  ...n,
-                  images: [...(n.images || []), imgUrl]
-                }
+                ...n,
+                images: [...(n.images || []), imgUrl],
+                lastEditedAt: new Date()
+              }
               : n
           ));
-        } catch (error) {
-          console.error('Error handling pasted image:', error);
-        }
+        };
+        reader.readAsDataURL(file);
       }
     }
   };
 
-  const filteredNotes = notes.filter(note => 
+  const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     note.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -258,15 +236,15 @@ const AppleNotes = () => {
   const formatDate = (date) => {
     const now = new Date();
     const noteDate = new Date(date);
-    
+
     // Get the start of today and the note's day (midnight) for accurate day comparison
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const noteDay = new Date(noteDate.getFullYear(), noteDate.getMonth(), noteDate.getDate());
-    
+
     // Calculate difference in days
     const diffTime = today - noteDay;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       // Today - show time
       return noteDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -283,15 +261,12 @@ const AppleNotes = () => {
   };
 
   useEffect(() => {
-    setGlobalTextColor(darkMode ? '#ffffff' : '#000000');
+    // Update text color for non-customized notes when theme changes
+    // This is a bit tricky. If we want "default" color to adapt, we need to know if it was customized.
+    // For simplicity, let's just leave it as is. Users can change it manually.
+    // Or we could iterate and update all notes that match the "old" default?
+    // Let's keep it simple: New notes get the correct theme color. Old notes keep their set color.
   }, [darkMode]);
-
-  const handleFontSizeChange = (increment) => {
-    setGlobalFontSize(prev => {
-      const newSize = prev + increment;
-      return newSize >= 12 && newSize <= 72 ? newSize : prev;
-    });
-  };
 
   useEffect(() => {
     const handleKeyboard = (e) => {
@@ -330,12 +305,12 @@ const AppleNotes = () => {
     const textWithMarker = marker + text;
     return btoa(unescape(encodeURIComponent(textWithMarker.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join(''))));
   };
-  
+
   const simpleDecrypt = (data, password) => {
     try {
       const decoded = decodeURIComponent(escape(atob(data)));
       const decrypted = decoded.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ password.charCodeAt(i % password.length))).join('');
-      
+
       // Check if the marker is present
       const marker = '::VALID::';
       if (decrypted.startsWith(marker)) {
@@ -415,9 +390,9 @@ const AppleNotes = () => {
         }, 3000);
         return;
       }
-      
+
       const decrypted = simpleDecrypt(note.encryptedContent, passwordInput);
-      
+
       if (decrypted !== null) {
         // Password is correct - store encrypted content for re-locking but clear content field
         setNotes(notes.map(n => n.id === passwordPrompt.noteId ? {
@@ -447,11 +422,11 @@ const AppleNotes = () => {
   };
 
   const handleRemovePassword = (noteId) => {
-    setNotes(notes.map(n => n.id === noteId ? { 
-      ...n, 
-      passwordProtected: false, 
-      encryptedContent: '', 
-      content: n.content 
+    setNotes(notes.map(n => n.id === noteId ? {
+      ...n,
+      passwordProtected: false,
+      encryptedContent: '',
+      content: n.content
     } : n));
     showToast('Password removed');
   };
@@ -480,41 +455,36 @@ const AppleNotes = () => {
 
         {/* Mobile overlay */}
         {isMobileSidebarOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
         )}
 
         {/* Main Editor Area */}
-        <main className={`flex-1 flex flex-col min-w-0 ${
-          darkMode ? 'bg-[#1a1a1a]' : 'bg-white'
-        }`}>
+        <main className={`flex-1 flex flex-col min-w-0 ${darkMode ? 'bg-[#1a1a1a]' : 'bg-white'
+          }`}>
           {currentNote && (
             <>
               {currentNote.passwordProtected ? (
                 <div className="flex flex-col items-center justify-center h-full p-4 sm:p-8">
-                  <div className={`rounded-2xl shadow-xl border flex flex-col items-center px-6 py-10 sm:px-10 sm:py-12 w-full max-w-sm ${
-                    darkMode 
-                      ? 'bg-gray-800/50 border-gray-700 backdrop-blur-lg' 
-                      : 'bg-white border-gray-200'
-                  }`}>
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
-                      darkMode ? 'bg-gray-700/50' : 'bg-gray-100'
+                  <div className={`rounded-2xl shadow-xl border flex flex-col items-center px-6 py-10 sm:px-10 sm:py-12 w-full max-w-sm ${darkMode
+                    ? 'bg-gray-800/50 border-gray-700 backdrop-blur-lg'
+                    : 'bg-white border-gray-200'
                     }`}>
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-100'
+                      }`}>
                       <Lock size={40} className={darkMode ? 'text-gray-400' : 'text-gray-500'} />
                     </div>
-                    <h2 className={`text-2xl font-bold mb-2 ${
-                      darkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
                       Note Locked
                     </h2>
-                    <p className={`text-center mb-8 ${
-                      darkMode ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-center mb-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
                       This note is password protected. Enter your password to view its contents.
                     </p>
-                    <button 
+                    <button
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-150 flex items-center justify-center gap-2"
                       onClick={() => handleUnlockNote(currentNote.id)}
                     >
@@ -528,16 +498,16 @@ const AppleNotes = () => {
                   <FormattingToolbar
                     currentNote={currentNote}
                     setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-                    globalIsBold={globalIsBold}
-                    setGlobalIsBold={setGlobalIsBold}
-                    globalIsItalic={globalIsItalic}
-                    setGlobalIsItalic={setGlobalIsItalic}
-                    globalIsUnderline={globalIsUnderline}
-                    setGlobalIsUnderline={setGlobalIsUnderline}
-                    globalFontSize={globalFontSize}
-                    handleFontSizeChange={handleFontSizeChange}
-                    globalTextColor={globalTextColor}
-                    setGlobalTextColor={setGlobalTextColor}
+                    globalIsBold={currentNote.isBold || false}
+                    setGlobalIsBold={(val) => updateNoteFormatting({ isBold: val })}
+                    globalIsItalic={currentNote.isItalic || false}
+                    setGlobalIsItalic={(val) => updateNoteFormatting({ isItalic: val })}
+                    globalIsUnderline={currentNote.isUnderline || false}
+                    setGlobalIsUnderline={(val) => updateNoteFormatting({ isUnderline: val })}
+                    globalFontSize={currentNote.fontSize || 16}
+                    handleFontSizeChange={(inc) => updateNoteFormatting({ fontSize: Math.max(12, Math.min(72, (currentNote.fontSize || 16) + inc)) })}
+                    globalTextColor={currentNote.textColor || (darkMode ? '#ffffff' : '#000000')}
+                    setGlobalTextColor={(val) => updateNoteFormatting({ textColor: val })}
                     darkMode={darkMode}
                     contentRef={contentRef}
                     onSetPassword={handleSetPassword}
@@ -547,6 +517,8 @@ const AppleNotes = () => {
                     onDropdownStateChange={setIsDropdownOpen}
                     isFullscreen={isFullscreen}
                     setIsFullscreen={setIsFullscreen}
+                    updateNoteFormatting={updateNoteFormatting} // Pass formatting updater
+                    updateNoteContent={updateNoteContent}
                   />
 
                   <div className="flex-1 overflow-y-auto">
@@ -564,11 +536,11 @@ const AppleNotes = () => {
                         handleSelectionChange={handleSelectionChange}
                         handlePaste={handlePaste}
                         darkMode={darkMode}
-                        globalTextColor={globalTextColor}
-                        globalFontSize={globalFontSize}
-                        globalIsBold={globalIsBold}
-                        globalIsItalic={globalIsItalic}
-                        globalIsUnderline={globalIsUnderline}
+                        globalTextColor={currentNote.textColor || (darkMode ? '#ffffff' : '#000000')}
+                        globalFontSize={currentNote.fontSize || 16}
+                        globalIsBold={currentNote.isBold || false}
+                        globalIsItalic={currentNote.isItalic || false}
+                        globalIsUnderline={currentNote.isUnderline || false}
                       />
                     </div>
                   </div>
@@ -581,16 +553,14 @@ const AppleNotes = () => {
 
       {/* Toast Notification */}
       {toast.visible && (
-        <div className={`fixed z-50 animate-slide-in ${
-          isDropdownOpen 
-            ? 'bottom-6 left-1/2 -translate-x-1/2' // Dropdown open: centered at bottom on all screens
-            : 'bottom-6 left-1/2 -translate-x-1/2 md:top-[100px] md:left-auto md:right-6 md:bottom-auto md:translate-x-0' // Dropdown closed: normal position
-        }`}>
-          <div className={`px-4 py-3 rounded-lg shadow-xl border flex items-center gap-2 ${
-            darkMode 
-              ? 'bg-gray-800 border-gray-700 text-white' 
-              : 'bg-white border-gray-200 text-gray-900'
+        <div className={`fixed z-50 animate-slide-in ${isDropdownOpen
+          ? 'bottom-6 left-1/2 -translate-x-1/2' // Dropdown open: centered at bottom on all screens
+          : 'bottom-6 left-1/2 -translate-x-1/2 md:top-[100px] md:left-auto md:right-6 md:bottom-auto md:translate-x-0' // Dropdown closed: normal position
           }`}>
+          <div className={`px-4 py-3 rounded-lg shadow-xl border flex items-center gap-2 ${darkMode
+            ? 'bg-gray-800 border-gray-700 text-white'
+            : 'bg-white border-gray-200 text-gray-900'
+            }`}>
             <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
             <span className="text-sm font-medium">{toast.message}</span>
           </div>
@@ -601,19 +571,17 @@ const AppleNotes = () => {
       {passwordPrompt.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div
-            className={`relative w-full max-w-md rounded-3xl shadow-2xl border transition-all duration-300 scale-100 animate-fade-in ${
-              darkMode
-                ? 'bg-gray-900 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}
+            className={`relative w-full max-w-md rounded-3xl shadow-2xl border transition-all duration-300 scale-100 animate-fade-in ${darkMode
+              ? 'bg-gray-900 border-gray-700'
+              : 'bg-white border-gray-200'
+              }`}
           >
             {/* Close Button */}
             <button
-              className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${
-                darkMode
-                  ? 'hover:bg-gray-700 text-gray-400'
-                  : 'hover:bg-gray-100 text-gray-500'
-              }`}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${darkMode
+                ? 'hover:bg-gray-700 text-gray-400'
+                : 'hover:bg-gray-100 text-gray-500'
+                }`}
               onClick={() => setPasswordPrompt({ open: false, noteId: null })}
             >
               <X size={20} />
@@ -622,9 +590,8 @@ const AppleNotes = () => {
             {/* Icon */}
             <div className="flex justify-center mt-8">
               <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                  darkMode ? 'bg-gray-800' : 'bg-gray-100'
-                }`}
+                className={`w-16 h-16 rounded-full flex items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-gray-100'
+                  }`}
               >
                 <Lock size={28} className={darkMode ? 'text-gray-300' : 'text-gray-600'} />
               </div>
@@ -633,17 +600,15 @@ const AppleNotes = () => {
             {/* Content */}
             <div className="px-8 pb-8 pt-6">
               <h2
-                className={`text-2xl font-semibold text-center mb-2 ${
-                  darkMode ? 'text-white' : 'text-gray-900'
-                }`}
+                className={`text-2xl font-semibold text-center mb-2 ${darkMode ? 'text-white' : 'text-gray-900'
+                  }`}
               >
                 {setPasswordMode ? 'Set Password' : 'Unlock Note'}
               </h2>
 
               <p
-                className={`text-center text-sm mb-6 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}
+                className={`text-center text-sm mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}
               >
                 {setPasswordMode
                   ? 'Create a password to protect this note'
@@ -653,15 +618,13 @@ const AppleNotes = () => {
               {/* Input */}
               <input
                 type="password"
-                className={`w-full px-4 py-3 rounded-xl border text-center font-medium tracking-wide focus:outline-none focus:ring-2 transition-all ${
-                  passwordError 
-                    ? 'border-red-500 focus:ring-red-500 animate-shake' 
-                    : 'focus:ring-blue-500'
-                } ${
-                  darkMode
+                className={`w-full px-4 py-3 rounded-xl border text-center font-medium tracking-wide focus:outline-none focus:ring-2 transition-all ${passwordError
+                  ? 'border-red-500 focus:ring-red-500 animate-shake'
+                  : 'focus:ring-blue-500'
+                  } ${darkMode
                     ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
                     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
-                }`}
+                  }`}
                 value={setPasswordMode ? newPassword : passwordInput}
                 onChange={(e) => {
                   setPasswordError(false);
@@ -677,19 +640,17 @@ const AppleNotes = () => {
 
               {/* Error Message */}
               {passwordError && passwordErrorMessage && (
-                <div className={`mt-3 px-4 py-2.5 rounded-lg flex items-center gap-2 ${
-                  darkMode 
-                    ? 'bg-red-500/10 border border-red-500/20' 
-                    : 'bg-red-50 border border-red-200'
-                }`}>
+                <div className={`mt-3 px-4 py-2.5 rounded-lg flex items-center gap-2 ${darkMode
+                  ? 'bg-red-500/10 border border-red-500/20'
+                  : 'bg-red-50 border border-red-200'
+                  }`}>
                   <div className="flex-shrink-0">
                     <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <p className={`text-sm font-medium ${
-                    darkMode ? 'text-red-400' : 'text-red-600'
-                  }`}>
+                  <p className={`text-sm font-medium ${darkMode ? 'text-red-400' : 'text-red-600'
+                    }`}>
                     {passwordErrorMessage}
                   </p>
                 </div>
