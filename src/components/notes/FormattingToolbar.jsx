@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bold, Italic, Underline, Type, Menu, Lock, Moon, Search, Settings, ChevronUp, ChevronDown, Fullscreen, Unlock, ShieldOff, Trash2, Mic } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AudioRecorder from './AudioRecorder';
 
 const FormattingToolbar = ({
@@ -262,27 +263,39 @@ const FormattingToolbar = ({
                   className={`flex items-center gap-1 p-1.5 rounded-2xl shadow-sm ${darkMode ? 'bg-[#111111]' : 'bg-gray-100'
                     }`}
                 >
-                  <button
-                    onClick={() => setIsAudioRecorderOpen(true)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${isAudioRecorderOpen
-                      ? darkMode ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
-                      : darkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white text-gray-700'
-                      }`}
-                    title="Voice to Text"
-                  >
-                    <Mic size={18} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setIsAudioRecorderOpen(true)}
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${isAudioRecorderOpen
+                          ? darkMode ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
+                          : darkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white text-gray-700'
+                          }`}
+                      >
+                        <Mic size={18} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Voice to Text</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-                  <button
-                    onClick={() => setIsSearchOpen(prev => !prev)}
-                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
-                      ? 'hover:bg-gray-800 text-gray-300'
-                      : 'hover:bg-white text-gray-700'
-                      }`}
-                    title="Search in Note"
-                  >
-                    <Search size={18} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setIsSearchOpen(prev => !prev)}
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
+                          ? 'hover:bg-gray-800 text-gray-300'
+                          : 'hover:bg-white text-gray-700'
+                          }`}
+                      >
+                        <Search size={18} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Search in Note</p>
+                    </TooltipContent>
+                  </Tooltip>
 
                   <div className="flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-150 active:scale-95">
                     {/* Fullscreen button - visible on md+ screens */}
@@ -302,39 +315,51 @@ const FormattingToolbar = ({
                     </button>
 
                     {/* Trash button - visible on small screens, now deletes note */}
-                    <button
-                      className={`flex md:hidden items-center justify-center w-full h-full rounded-xl transition-all duration-150 active:scale-95 ${darkMode
-                        ? 'hover:bg-gray-800 text-gray-300'
-                        : 'hover:bg-white text-gray-700'
-                        }`}
-                      onClick={() => {
-                        const event = new KeyboardEvent('keydown', {
-                          key: 'Delete',
-                          ctrlKey: true,
-                          code: 'Delete'
-                        });
-                        window.dispatchEvent(event);
-                      }}
-                      title="Delete Note"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className={`flex md:hidden items-center justify-center w-full h-full rounded-xl transition-all duration-150 active:scale-95 ${darkMode
+                            ? 'hover:bg-gray-800 text-gray-300'
+                            : 'hover:bg-white text-gray-700'
+                            }`}
+                          onClick={() => {
+                            const event = new KeyboardEvent('keydown', {
+                              key: 'Delete',
+                              ctrlKey: true,
+                              code: 'Delete'
+                            });
+                            window.dispatchEvent(event);
+                          }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete Note</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
 
 
 
 
                   <div className="relative" ref={mobileSettingsRef}>
-                    <button
-                      onClick={() => setIsSettingsOpen(prev => !prev)}
-                      className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
-                        ? 'hover:bg-gray-800 text-gray-300'
-                        : 'hover:bg-white text-gray-700'
-                        }`}
-                      title="Settings"
-                    >
-                      <Settings size={18} />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setIsSettingsOpen(prev => !prev)}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
+                            ? 'hover:bg-gray-800 text-gray-300'
+                            : 'hover:bg-white text-gray-700'
+                            }`}
+                        >
+                          <Settings size={18} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Settings</p>
+                      </TooltipContent>
+                    </Tooltip>
 
                     {isSettingsOpen && (
                       <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-50 py-1 ${darkMode
@@ -408,93 +433,139 @@ const FormattingToolbar = ({
             {/* Text Formatting Group */}
             <div className={`flex items-center gap-1 p-1.5 rounded-xl md:shrink-0 shadow-inner ${darkMode ? 'bg-gray-800/60' : 'bg-white'
               }`}>
-              <button
-                onClick={() => setGlobalIsBold(!globalIsBold)}
-                className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsBold
-                  ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
-                  : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-                title="Bold"
-              >
-                <Bold size={16} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setGlobalIsBold(!globalIsBold)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsBold
+                      ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                      : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    <Bold size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Bold</p>
+                </TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={() => setGlobalIsItalic(!globalIsItalic)}
-                className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsItalic
-                  ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
-                  : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-                title="Italic"
-              >
-                <Italic size={16} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setGlobalIsItalic(!globalIsItalic)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsItalic
+                      ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                      : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    <Italic size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Italic</p>
+                </TooltipContent>
+              </Tooltip>
 
-              <button
-                onClick={() => setGlobalIsUnderline(!globalIsUnderline)}
-                className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsUnderline
-                  ? darkMode ? 'bg-blue-600 text-white ' : 'bg-blue-500 text-white  '
-                  : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-                title="Underline"
-              >
-                <Underline size={16} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setGlobalIsUnderline(!globalIsUnderline)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${globalIsUnderline
+                      ? darkMode ? 'bg-blue-600 text-white ' : 'bg-blue-500 text-white  '
+                      : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    <Underline size={16} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Underline</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Font Size Control */}
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-2xl md:shrink-0 shadow-inner ${darkMode ? 'bg-gray-800/60' : 'bg-white'
               }`}>
-              <button
-                onClick={() => handleFontSizeChange(-1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-2xl text-sm transition-all active:scale-95 ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-              >
-                −
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleFontSizeChange(-1)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-2xl text-sm transition-all active:scale-95 ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    −
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Decrease font size</p>
+                </TooltipContent>
+              </Tooltip>
 
               <span className={`w-10 h-8 flex items-center justify-center text-sm font-medium rounded-md ${darkMode ? 'text-gray-300' : 'text-gray-700'
                 }`}>
                 {globalFontSize}
               </span>
 
-              <button
-                onClick={() => handleFontSizeChange(1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-2xl text-sm transition-all active:scale-95 ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-              >
-                +
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleFontSizeChange(1)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-2xl text-sm transition-all active:scale-95 ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    +
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Increase font size</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Color Picker */}
             <div className="relative md:shrink-0">
-              <input
-                type="color"
-                value={globalTextColor}
-                onChange={(e) => setGlobalTextColor(e.target.value)}
-                className="w-8 h-8 absolute inset-0 opacity-0 cursor-pointer"
-                title="Text Color"
-              />
-              <div
-                className="w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm"
-                style={{ backgroundColor: globalTextColor }}
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-8 h-8 relative cursor-pointer">
+                    <input
+                      type="color"
+                      value={globalTextColor}
+                      onChange={(e) => setGlobalTextColor(e.target.value)}
+                      className="w-8 h-8 absolute inset-0 opacity-0 cursor-pointer z-10"
+                    />
+                    <div
+                      className="w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm"
+                      style={{ backgroundColor: globalTextColor }}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Text Color</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Audio Recorder Button */}
             <div className={`hidden md:flex items-center gap-1 p-1.5 rounded-xl md:shrink-0 shadow-inner ${darkMode ? 'bg-gray-800/60' : 'bg-white'
               }`}>
-              <button
-                onClick={() => setIsAudioRecorderOpen(true)}
-                className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${isAudioRecorderOpen
-                  ? darkMode ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
-                  : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
-                  }`}
-                title="Voice to Text"
-              >
-                <Mic size={18} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsAudioRecorderOpen(true)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-2xl transition-all duration-150 active:scale-95 ${isAudioRecorderOpen
+                      ? darkMode ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
+                      : darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    <Mic size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Voice to Text</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           {isSearchOpen && (
@@ -558,42 +629,61 @@ const FormattingToolbar = ({
                 }`}
             >
 
-              <button
-                onClick={() => setIsSearchOpen(prev => !prev)}
-                className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
-                  ? 'hover:bg-gray-800 text-gray-300'
-                  : 'hover:bg-white text-gray-700'
-                  }`}
-                title="Search in Note"
-              >
-                <Search size={18} />
-              </button>
-              <button
-                className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${isFullscreen
-                  ? darkMode
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-500 text-white'
-                  : darkMode
-                    ? 'hover:bg-gray-800 text-gray-300'
-                    : 'hover:bg-white text-gray-700'
-                  }`}
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Mode"}
-              >
-                <Fullscreen size={18} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsSearchOpen(prev => !prev)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
+                      ? 'hover:bg-gray-800 text-gray-300'
+                      : 'hover:bg-white text-gray-700'
+                      }`}
+                  >
+                    <Search size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Search</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${isFullscreen
+                      ? darkMode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-500 text-white'
+                      : darkMode
+                        ? 'hover:bg-gray-800 text-gray-300'
+                        : 'hover:bg-white text-gray-700'
+                      }`}
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                  >
+                    <Fullscreen size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</p>
+                </TooltipContent>
+              </Tooltip>
 
               <div className="relative" ref={settingsRef}>
-                <button
-                  onClick={() => setIsSettingsOpen(prev => !prev)}
-                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
-                    ? 'hover:bg-gray-800 text-gray-300'
-                    : 'hover:bg-white text-gray-700'
-                    }`}
-                  title="Settings"
-                >
-                  <Settings size={18} />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setIsSettingsOpen(prev => !prev)}
+                      className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-95 ${darkMode
+                        ? 'hover:bg-gray-800 text-gray-300'
+                        : 'hover:bg-white text-gray-700'
+                        }`}
+                    >
+                      <Settings size={18} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Settings</p>
+                  </TooltipContent>
+                </Tooltip>
 
                 {isSettingsOpen && (
                   <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-lg border z-50 py-1 ${darkMode

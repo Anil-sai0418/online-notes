@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Sidebar from './Sidebar';
-import FormattingToolbar from './FormattingToolbar';
-import ImagesGrid from './ImagesGrid';
-import TextEditor from './TextEditor';
+import Sidebar from '../components/notes/Sidebar';
+import FormattingToolbar from '../components/notes/FormattingToolbar';
+import ImagesGrid from '../components/notes/ImagesGrid';
+import TextEditor from '../components/notes/TextEditor';
 import { Lock, Unlock, ShieldOff, X } from 'lucide-react';
 
 
@@ -229,8 +229,7 @@ const AppleNotes = () => {
   };
 
   const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+    note.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatDate = (date) => {
@@ -262,10 +261,17 @@ const AppleNotes = () => {
 
   useEffect(() => {
     // Update text color for non-customized notes when theme changes
-    // This is a bit tricky. If we want "default" color to adapt, we need to know if it was customized.
-    // For simplicity, let's just leave it as is. Users can change it manually.
-    // Or we could iterate and update all notes that match the "old" default?
-    // Let's keep it simple: New notes get the correct theme color. Old notes keep their set color.
+    setNotes(prevNotes => prevNotes.map(n => {
+      // If dark mode is active and text is black, make it white
+      if (darkMode && (n.textColor === '#000000' || !n.textColor)) {
+        return { ...n, textColor: '#ffffff' };
+      }
+      // If light mode is active and text is white, make it black
+      if (!darkMode && (n.textColor === '#ffffff' || !n.textColor)) {
+        return { ...n, textColor: '#000000' };
+      }
+      return n;
+    }));
   }, [darkMode]);
 
   useEffect(() => {

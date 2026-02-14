@@ -1,14 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus,  Search, Sun, Moon, X, ChevronLeft, } from 'lucide-react';
+import { Plus, Search, Sun, Moon, X, ChevronLeft, } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Sidebar = ({
-
   filteredNotes,
   activeNote,
   setActiveNote,
   addNote,
-
   darkMode,
   setDarkMode,
   searchQuery,
@@ -16,18 +15,17 @@ const Sidebar = ({
   searchInputRef,
   isMobileSidebarOpen,
   setIsMobileSidebarOpen,
-
 }) => {
   const navigate = useNavigate();
 
   const formatDate = (date) => {
     const now = new Date();
     const noteDate = new Date(date);
-    
+
     // Get the start of today and the note's day (midnight) for accurate day comparison
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const noteDay = new Date(noteDate.getFullYear(), noteDate.getMonth(), noteDate.getDate());
-    
+
     // Calculate difference in days
     const diffTime = today - noteDay;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -91,7 +89,7 @@ const Sidebar = ({
               `}
             >
               <span>SCRIBYX</span>
-             
+
             </button>
           </div>
 
@@ -106,45 +104,56 @@ const Sidebar = ({
               }
             `}
           >
-            <button
-              onClick={addNote}
-              className={`
-                flex items-center justify-center
-                w-9 h-9 rounded-full
-                transition-colors duration-150
-                ${darkMode
-                  ? 'text-gray-200 hover:bg-gray-800'
-                  : 'text-gray-700 hover:bg-gray-200'
-                }
-              `}
-              title="New note"
-            >
-              <Plus size={16} />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={addNote}
+                  className={`
+                    flex items-center justify-center
+                    w-9 h-9 rounded-full
+                    transition-colors duration-150
+                    ${darkMode
+                      ? 'text-gray-200 hover:bg-gray-800'
+                      : 'text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  <Plus size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>New Note</p>
+              </TooltipContent>
+            </Tooltip>
 
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`
-                flex items-center justify-center
-                w-9 h-9 rounded-full
-                transition-colors duration-150
-                ${darkMode
-                  ? 'text-gray-200 hover:bg-gray-800'
-                  : 'text-gray-700 hover:bg-gray-200'
-                }
-              `}
-              title="Toggle theme"
-            >
-              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className={`
+                    flex items-center justify-center
+                    w-9 h-9 rounded-full
+                    transition-colors duration-150
+                    ${darkMode
+                      ? 'text-gray-200 hover:bg-gray-800'
+                      : 'text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Theme</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
         {/* Search Bar */}
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-          darkMode
-            ? 'bg-gray-800/50 border border-gray-800 focus-within:border-gray-700'
-            : 'bg-gray-50 border border-gray-200 focus-within:border-gray-300'
-        }`}>
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${darkMode
+          ? 'bg-gray-800/50 border border-gray-800 focus-within:border-gray-700'
+          : 'bg-gray-50 border border-gray-200 focus-within:border-gray-300'
+          }`}>
           <Search size={16} className={darkMode ? 'text-gray-500' : 'text-gray-400'} />
           <input
             ref={searchInputRef}
@@ -152,9 +161,8 @@ const Sidebar = ({
             placeholder="Search (⌘ + k)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`flex-1 bg-transparent outline-none text-sm ${
-              darkMode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
-            }`}
+            className={`flex-1 bg-transparent outline-none text-sm ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+              }`}
           />
         </div>
       </div>
@@ -174,9 +182,8 @@ const Sidebar = ({
             </p>
             {searchQuery && (
               <p
-                className={`mt-1 text-sm font-semibold break-words ${
-                  darkMode ? 'text-white' : 'text-gray-800'
-                }`}
+                className={`mt-1 text-sm font-semibold break-words ${darkMode ? 'text-white' : 'text-gray-800'
+                  }`}
               >
                 "{searchQuery}"
               </p>
@@ -199,8 +206,8 @@ const Sidebar = ({
                       ? 'bg-blue-600/10 border border-blue-600/20'
                       : 'bg-blue-50 border border-blue-100'
                     : darkMode
-                    ? 'hover:bg-gray-800/50 border border-transparent'
-                    : 'hover:bg-gray-50 border border-transparent'
+                      ? 'hover:bg-gray-800/50 border border-transparent'
+                      : 'hover:bg-gray-50 border border-transparent'
                   }
                 `}
               >
@@ -208,28 +215,24 @@ const Sidebar = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       {activeNote === note.id && (
-                        <div className={`w-2 h-2 rounded-full ${
-                          darkMode ? 'bg-blue-500' : 'bg-blue-600'
-                        }`} />
+                        <div className={`w-2 h-2 rounded-full ${darkMode ? 'bg-blue-500' : 'bg-blue-600'
+                          }`} />
                       )}
-                      <h3 className={`font-medium text-sm truncate ${
-                        darkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
+                      <h3 className={`font-medium text-sm truncate ${darkMode ? 'text-white' : 'text-gray-900'
+                        }`}>
                         {note.title}
                       </h3>
                     </div>
-                    <p className={`text-xs truncate ${
-                      darkMode ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-xs truncate ${darkMode ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
                       {note.content.substring(0, 50)}
                     </p>
-                    <p className={`text-xs mt-1 ${
-                      darkMode ? 'text-gray-600' : 'text-gray-400'
-                    }`}>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
                       {formatDate(note.timestamp)}
                     </p>
                   </div>
-               
+
                 </div>
               </div>
             ))}
