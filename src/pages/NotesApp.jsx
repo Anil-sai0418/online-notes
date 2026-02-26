@@ -4,6 +4,16 @@ import FormattingToolbar from '../components/notes/FormattingToolbar';
 import ImagesGrid from '../components/notes/ImagesGrid';
 import TextEditor from '../components/notes/TextEditor';
 import { Lock, Unlock, ShieldOff, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 
 
 const AppleNotes = () => {
@@ -36,6 +46,7 @@ const AppleNotes = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, noteId: null });
 
   const showToast = useCallback((message) => {
     setToast({ visible: true, message });
@@ -167,6 +178,14 @@ const AppleNotes = () => {
     showToast('Note deleted successfully');
   };
 
+  const requestDeleteNote = useCallback((id) => {
+    if (notes.length === 1) {
+      showToast('At least one note must remain');
+      return;
+    }
+    setDeleteConfirmation({ open: true, noteId: id });
+  }, [notes.length, showToast]);
+
   const updateNoteContent = (content) => {
     setNotes(notes.map(n =>
       n.id === activeNote
@@ -290,14 +309,14 @@ const AppleNotes = () => {
       if (e.ctrlKey && (e.key === 'Backspace' || e.key === 'Delete')) {
         e.preventDefault();
         if (currentNote) {
-          deleteNote(currentNote.id);
+          requestDeleteNote(currentNote.id);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyboard);
     return () => window.removeEventListener('keydown', handleKeyboard);
-  }, [addNote, showToast, currentNote, deleteNote]);
+  }, [addNote, showToast, currentNote, requestDeleteNote]);
 
   const navigateHome = () => {
     setActiveNote(1);
@@ -674,6 +693,42 @@ const AppleNotes = () => {
 
         </div>
       )}
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog
+        open={deleteConfirmation.open}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmation({ open: false, noteId: null });
+        }}
+      >
+        <AlertDialogContent className={darkMode ? 'bg-[#1a1a1a] border-gray-800 text-white' : 'bg-white'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className={darkMode ? 'text-white' : 'text-gray-900'}>Delete note?</AlertDialogTitle>
+            <AlertDialogDescription className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+              This action cannot be undone. This will permanently delete your note.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className={darkMode ? 'bg-transparent border-gray-700 hover:bg-gray-800 text-white hover:text-white' : ''}
+              onClick={() => setDeleteConfirmation({ open: false, noteId: null })}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={() => {
+                if (deleteConfirmation.noteId) {
+                  deleteNote(deleteConfirmation.noteId);
+                  setDeleteConfirmation({ open: false, noteId: null });
+                }
+              }}
+            >
+              Delete Note
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
