@@ -138,7 +138,7 @@ relative z-20">
             and move forward without distraction.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start w-full gap-4">
             <button
               onClick={() => navigate('/online-notes')}
               className="px-8 py-4 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold shadow-md shadow-blue-700/30 hover:shadow-blue-700/50 transition-all transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
@@ -251,8 +251,17 @@ relative z-20">
       </div>
 
 <footer className='relative z-20 flex justify-center flex-col mt-auto pb-4 items-center text-sm text-gray-700 dark:text-gray-300'>
-  <p className="font-xs  text-gray-500 dark:text-gray-600">
-    Developed by Anil
+  <p className="text-xs text-black dark:text-gray-400 flex items-center gap-1">
+    Developed by
+    <a
+      href="https://anilsai-portfolio.vercel.app"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="relative font-semibold text-black dark:text-black transition-colors duration-200 hover:text-blue-600 dark:hover:text-blue-400 after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[1px] after:w-0 after:bg-current after:transition-all after:duration-300 hover:after:w-full"
+      title="Visit portfolio"
+    >
+      Anil
+    </a>
   </p>
   <p className="text-xs mt-1 text-gray-300 dark:text-gray-600">
     © {new Date().getFullYear()} Scribyx. All rights reserved.
